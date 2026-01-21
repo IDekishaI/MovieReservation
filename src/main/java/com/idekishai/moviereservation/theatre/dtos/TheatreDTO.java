@@ -4,4 +4,5 @@ public record TheatreDTO(
         String theatreName,
         String theatreAddress,
         String theatreCity
-){}
+) {
+}

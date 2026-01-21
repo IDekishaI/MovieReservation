@@ -17,10 +17,10 @@ public class Theatre {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int theatreId;
-    @Column(name = "theatreName", unique = true)
+    @Column(name = "theatreName", nullable = false)
     String theatreName;
-    @Column(name = "theatreAddress", unique = true)
+    @Column(name = "theatreAddress", nullable = false)
     String theatreAddress;
-    @Column(name = "theatreCity", unique = true)
+    @Column(name = "theatreCity", nullable = false)
     String theatreCity;
 }

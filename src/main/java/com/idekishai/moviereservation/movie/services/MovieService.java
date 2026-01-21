@@ -13,7 +13,8 @@ import java.util.List;
 public class MovieService {
     private final MovieRepository movieRepo;
     private final MovieMapper movieMapper;
-    public List<MovieDTO> getAllMovies(){
+
+    public List<MovieDTO> getAllMovies() {
         return movieMapper.toDtoList(movieRepo.findAll());
     }
 }

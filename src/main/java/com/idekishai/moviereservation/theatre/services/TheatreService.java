@@ -14,7 +14,7 @@ public class TheatreService {
     private final TheatreRepository theatreRepo;
     private final TheatreMapper theatreMapper;
 
-    public List<TheatreDTO> getAllTheatres(){
+    public List<TheatreDTO> getAllTheatres() {
         return theatreMapper.toDtoList(theatreRepo.findAll());
     }
 }

@@ -15,8 +15,9 @@ import java.util.List;
 @RequestMapping("/theatres")
 public class TheatreController {
     private final TheatreService theatreService;
+
     @GetMapping
-    public ResponseEntity<List<TheatreDTO>> getAllTheatres(){
+    public ResponseEntity<List<TheatreDTO>> getAllTheatres() {
         return ResponseEntity.ok(theatreService.getAllTheatres());
     }
 }

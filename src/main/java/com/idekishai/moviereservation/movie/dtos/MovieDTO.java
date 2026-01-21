@@ -4,4 +4,5 @@ public record MovieDTO(
         String movieName,
         short movieLength,
         String movieType
-){}
+) {
+}
