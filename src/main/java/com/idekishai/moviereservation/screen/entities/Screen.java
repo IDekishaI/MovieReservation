@@ -1,5 +1,6 @@
 package com.idekishai.moviereservation.screen.entities;
 
+import com.idekishai.moviereservation.theatre.entities.Theatre;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,8 +18,9 @@ public class Screen {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int screenId;
-    @Column(name = "theatreId", nullable = false)
-    int theatreId;
+    @ManyToOne
+    @JoinColumn(name = "theatreId")
+    Theatre theatre;
     @Column(name = "screenName", nullable = false)
     String screenName;
     @Column(name = "totalSeats", nullable = false)
