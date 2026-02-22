@@ -18,5 +18,6 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
             WHERE t.theatreId = :theatreId
             """)
     List<Showtime> findAllByTheatreId(@Param("theatreId") int theatreId);
+
     List<Showtime> findByMovie_MovieId(int movieId);
 }

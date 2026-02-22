@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @Component
 public class ShowtimeMapper {
-    public ShowtimeDisplayDTO toShowtimeDisplayDTO(Showtime showtime){
+    public ShowtimeDisplayDTO toShowtimeDisplayDTO(Showtime showtime) {
         return new ShowtimeDisplayDTO(
                 showtime.getMovie().getMovieName(),
                 showtime.getTheatre().getTheatreName(),
@@ -21,7 +21,8 @@ public class ShowtimeMapper {
                 showtime.getPrice()
         );
     }
-    public List<ShowtimeDisplayDTO> toShowtimeDisplayDTOList(List<Showtime> showtimes){
+
+    public List<ShowtimeDisplayDTO> toShowtimeDisplayDTOList(List<Showtime> showtimes) {
         return showtimes.stream()
                 .filter(Objects::nonNull)
                 .map(this::toShowtimeDisplayDTO)

@@ -36,7 +36,7 @@ public class Showtime {
     @Column(name = "price", nullable = false)
     Float price;
 
-    public Theatre getTheatre(){
+    public Theatre getTheatre() {
         return screen.getTheatre();
     }
 }
