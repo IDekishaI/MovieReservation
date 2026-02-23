@@ -27,7 +27,7 @@ public class SeatService {
         return allSeats.stream()
                 .map(seat -> {
                     SeatStatus status = unavailableSeatIds.contains(seat.getSeatId()) ? SeatStatus.UNAVAILABLE : SeatStatus.AVAILABLE;
-                    return new SeatAvailabilityDTO(seat.getSeatRow(), seat.getSeatColumn(), seat.getSeatType(), status);
+                    return new SeatAvailabilityDTO(seat.getSeatId(), seat.getSeatRow(), seat.getSeatColumn(), seat.getSeatType(), status);
                 })
                 .toList();
     }

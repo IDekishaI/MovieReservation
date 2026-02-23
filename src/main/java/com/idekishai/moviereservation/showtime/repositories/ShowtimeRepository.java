@@ -13,11 +13,20 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
     @Query("""
             SELECT s
             FROM Showtime s
-            JOIN s.screen sc
-            JOIN sc.theatre t
+            JOIN FETCH s.movie m
+            JOIN FETCH s.screen sc
+            JOIN FETCH sc.theatre t
             WHERE t.theatreId = :theatreId
             """)
     List<Showtime> findAllByTheatreId(@Param("theatreId") int theatreId);
 
+    @Query("""
+            SELECT s
+            FROM Showtime s
+            JOIN FETCH s.screen sc
+            JOIN FETCH sc.theatre t
+            JOIN FETCH s.movie m
+            WHERE m.movieId = :movieId
+""")
     List<Showtime> findByMovie_MovieId(int movieId);
 }

@@ -10,7 +10,7 @@ import java.util.Objects;
 @Component
 public class MovieMapper {
     public MovieDTO toDto(Movie movie) {
-        return new MovieDTO(movie.getMovieName(), movie.getMovieLength(), movie.getMovieType());
+        return new MovieDTO(movie.getMovieId(), movie.getMovieName(), movie.getMovieLength(), movie.getMovieType());
     }
 
     public Movie toEntity(MovieDTO dto) {

@@ -10,7 +10,7 @@ import java.util.Objects;
 @Component
 public class TheatreMapper {
     public TheatreDTO toDto(Theatre theatre) {
-        return new TheatreDTO(theatre.getTheatreName(), theatre.getTheatreAddress(), theatre.getTheatreCity());
+        return new TheatreDTO(theatre.getTheatreId(), theatre.getTheatreName(), theatre.getTheatreAddress(), theatre.getTheatreCity());
     }
 
     public Theatre toEntity(TheatreDTO dto) {

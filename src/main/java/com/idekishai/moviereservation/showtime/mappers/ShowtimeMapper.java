@@ -11,7 +11,10 @@ import java.util.Objects;
 public class ShowtimeMapper {
     public ShowtimeDisplayDTO toShowtimeDisplayDTO(Showtime showtime) {
         return new ShowtimeDisplayDTO(
+                showtime.getShowtimeId(),
+                showtime.getMovie().getMovieId(),
                 showtime.getMovie().getMovieName(),
+                showtime.getTheatre().getTheatreId(),
                 showtime.getTheatre().getTheatreName(),
                 showtime.getTheatre().getTheatreAddress(),
                 showtime.getTheatre().getTheatreCity(),

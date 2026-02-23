@@ -4,7 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record ShowtimeDisplayDTO(
+        int showtimeId,
+        int movieId,
         String movieName,
+        int theatreId,
         String theatreName,
         String theatreAddress,
         String theatreCity,
