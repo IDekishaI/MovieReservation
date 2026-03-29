@@ -2,6 +2,7 @@ package com.idekishai.moviereservation.seat.seat_reservation.repositories;
 
 import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,5 +18,14 @@ public interface SeatReservationRepository extends JpaRepository<SeatReservation
                     AND (sr.status = 'BOOKED' OR (sr.status = 'LOCKED' AND sr.lockedUntil > :now))
             """)
     List<Integer> findUnavailableSeatIds(@Param("showtimeId") int showtimeId, @Param("now") LocalDateTime now);
+
     boolean existsBySeat_SeatIdAndShowtime_ShowtimeIdAndLockedUntilAfter(int seatId, int showtimeId, LocalDateTime now);
+
+    @Modifying
+    @Query("""
+            DELETE FROM SeatReservation sr
+            WHERE sr.status = 'LOCKED'
+            AND sr.lockedUntil < :now
+            """)
+    int deleteExpiredLocks(@Param("now") LocalDateTime now);
 }

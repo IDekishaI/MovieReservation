@@ -25,6 +25,9 @@ public class SeatReservationService {
 
         Showtime showtime = showtimeRepository.findById(dto.showtimeId()).orElseThrow(() -> new RuntimeException("Showtime with id not found"));
 
+        if(seat.getScreen().getScreenId() != showtime.getScreen().getScreenId())
+            throw new RuntimeException("Seat is not inside this screen");
+
         boolean isUnavailable = seatReservationRepository.existsBySeat_SeatIdAndShowtime_ShowtimeIdAndLockedUntilAfter(dto.seatId(), dto.showtimeId(), LocalDateTime.now());
         if(isUnavailable)
             throw new RuntimeException("Seat is locked or booked for this showtime");
