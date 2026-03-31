@@ -35,6 +35,9 @@ public class SeatReservation {
     @Column(name = "status", nullable = false)
     ReservationStatus status;
 
+    @Column(name = "lockedBy", nullable = false)
+    String lockedBy;
+
     @Column(name = "lockedUntil")
     LocalDateTime lockedUntil;
 }

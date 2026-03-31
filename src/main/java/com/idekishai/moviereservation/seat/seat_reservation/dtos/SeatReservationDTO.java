@@ -4,11 +4,12 @@ import com.idekishai.moviereservation.seat.enums.ReservationStatus;
 
 import java.time.LocalDateTime;
 
-public record SeatReservationDTO (
+public record SeatReservationDTO(
         int seatReservationId,
         char seatRow,
         int seatColumn,
         ReservationStatus status,
+        String lockedBy,
         LocalDateTime lockedUntil
-){
+) {
 }

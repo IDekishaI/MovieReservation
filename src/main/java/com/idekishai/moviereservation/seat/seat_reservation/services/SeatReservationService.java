@@ -1,5 +1,6 @@
 package com.idekishai.moviereservation.seat.seat_reservation.services;
 
+import com.idekishai.moviereservation.common.SecurityUtils;
 import com.idekishai.moviereservation.seat.entities.Seat;
 import com.idekishai.moviereservation.seat.enums.ReservationStatus;
 import com.idekishai.moviereservation.seat.repositories.SeatRepository;
@@ -20,17 +21,20 @@ public class SeatReservationService {
     private final SeatReservationRepository seatReservationRepository;
     private final SeatRepository seatRepository;
     private final ShowtimeRepository showtimeRepository;
-    public SeatReservationDTO lockSeat(ReservationRequestDTO dto){
+
+    public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
         Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new RuntimeException("Seat with id not found"));
 
         Showtime showtime = showtimeRepository.findById(dto.showtimeId()).orElseThrow(() -> new RuntimeException("Showtime with id not found"));
 
-        if(seat.getScreen().getScreenId() != showtime.getScreen().getScreenId())
+        if (seat.getScreen().getScreenId() != showtime.getScreen().getScreenId())
             throw new RuntimeException("Seat is not inside this screen");
 
         boolean isUnavailable = seatReservationRepository.existsBySeat_SeatIdAndShowtime_ShowtimeIdAndLockedUntilAfter(dto.seatId(), dto.showtimeId(), LocalDateTime.now());
-        if(isUnavailable)
+        if (isUnavailable)
             throw new RuntimeException("Seat is locked or booked for this showtime");
+
+        String lockedBy = SecurityUtils.getCurrentUserEmail();
 
         LocalDateTime lockedUntil = LocalDateTime.now().plusMinutes(5);
 
@@ -38,6 +42,7 @@ public class SeatReservationService {
         reservation.setSeat(seat);
         reservation.setShowtime(showtime);
         reservation.setStatus(ReservationStatus.LOCKED);
+        reservation.setLockedBy(lockedBy);
         reservation.setLockedUntil(lockedUntil);
 
         SeatReservation saved = seatReservationRepository.save(reservation);
@@ -47,6 +52,7 @@ public class SeatReservationService {
                 seat.getSeatRow(),
                 seat.getSeatColumn(),
                 saved.getStatus(),
+                saved.getLockedBy(),
                 saved.getLockedUntil()
         );
     }
