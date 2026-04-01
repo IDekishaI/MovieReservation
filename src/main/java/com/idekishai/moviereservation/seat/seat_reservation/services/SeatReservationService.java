@@ -4,16 +4,23 @@ import com.idekishai.moviereservation.common.SecurityUtils;
 import com.idekishai.moviereservation.seat.entities.Seat;
 import com.idekishai.moviereservation.seat.enums.ReservationStatus;
 import com.idekishai.moviereservation.seat.repositories.SeatRepository;
+import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingConfirmationDTO;
+import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.SeatReservationDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
+import com.idekishai.moviereservation.seat.seat_reservation.payment.entities.Payment;
+import com.idekishai.moviereservation.seat.seat_reservation.payment.services.PaymentService;
 import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatReservationRepository;
 import com.idekishai.moviereservation.showtime.entities.Showtime;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @RequiredArgsConstructor
 @Service
@@ -21,6 +28,7 @@ public class SeatReservationService {
     private final SeatReservationRepository seatReservationRepository;
     private final SeatRepository seatRepository;
     private final ShowtimeRepository showtimeRepository;
+    private final PaymentService paymentService;
 
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
         Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new RuntimeException("Seat with id not found"));
@@ -55,5 +63,46 @@ public class SeatReservationService {
                 saved.getLockedBy(),
                 saved.getLockedUntil()
         );
+    }
+
+    @Transactional
+    public BookingConfirmationDTO bookSeat(BookingRequestDTO dto) {
+        SeatReservation seatReservation = seatReservationRepository.findById(dto.seatReservationId()).orElseThrow(() -> new RuntimeException("Seat Reservation Id doesn't exist"));
+
+        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
+
+        if (seatReservation.getStatus() != ReservationStatus.LOCKED)
+            throw new RuntimeException("Seat isn't locked");
+        if (seatReservation.getLockedUntil().isBefore(LocalDateTime.now()))
+            throw new RuntimeException("Seat reservation lock has expired");
+        if (!seatReservation.getLockedBy().equals(currentUserEmail))
+            throw new RuntimeException("Seat hasn't been locked by the same user");
+
+        seatReservation.setStatus(ReservationStatus.BOOKED);
+        seatReservation.setLockedUntil(null);
+
+        int seatReservationId = seatReservation.getSeatReservationId();
+        char seatRow = seatReservation.getSeat().getSeatRow();
+        int seatColumn = seatReservation.getSeat().getSeatColumn();
+        ReservationStatus reservationStatus = ReservationStatus.BOOKED;
+        String movieName = seatReservation.getShowtime().getMovie().getMovieName();
+        LocalDate movieDate = seatReservation.getShowtime().getShowtimeDate();
+        LocalTime movieTime = seatReservation.getShowtime().getShowtimeTime();
+        String cardHolderName = dto.cardHolderName();
+        String lastFourDigits = dto.cardNumber().substring(dto.cardNumber().length() - 4);
+
+        seatReservationRepository.save(seatReservation);
+        Payment payment = paymentService.savePayment(dto);
+
+        return new BookingConfirmationDTO(seatReservationId,
+                seatRow,
+                seatColumn,
+                reservationStatus,
+                movieName,
+                movieDate,
+                movieTime,
+                cardHolderName,
+                lastFourDigits,
+                payment.getPaidAt());
     }
 }

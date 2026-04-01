@@ -1,5 +1,7 @@
 package com.idekishai.moviereservation.seat.seat_reservation.controllers;
 
+import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingConfirmationDTO;
+import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.SeatReservationDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.services.SeatReservationService;
@@ -16,5 +18,9 @@ public class SeatReservationController {
     @PostMapping("/lock")
     public ResponseEntity<SeatReservationDTO> lockSeat(@RequestBody ReservationRequestDTO reservationRequestDTO){
         return ResponseEntity.status(HttpStatus.CREATED).body(seatReservationService.lockSeat(reservationRequestDTO));
+    }
+    @PatchMapping("/book")
+    public ResponseEntity<BookingConfirmationDTO> bookSeat(@RequestBody BookingRequestDTO bookingRequestDTO){
+        return ResponseEntity.ok(seatReservationService.bookSeat(bookingRequestDTO));
     }
 }

@@ -1,5 +1,6 @@
 package com.idekishai.moviereservation.auth.config;
 
+import com.idekishai.moviereservation.auth.dtos.UserPrincipal;
 import com.idekishai.moviereservation.auth.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,7 +28,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             if (jwtService.isTokenValid(token)) {
                 String email = jwtService.extractEmail(token);
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(email, null, List.of());
+                String name = jwtService.extractName(token);
+                UserPrincipal userPrincipal = new UserPrincipal(email, name);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userPrincipal, null, List.of());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
