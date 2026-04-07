@@ -17,6 +17,8 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
             JOIN FETCH s.screen sc
             JOIN FETCH sc.theatre t
             WHERE t.theatreId = :theatreId
+            AND (s.showtimeDate > CURRENT_DATE
+                    OR (s.showtimeDate = CURRENT_DATE AND s.showtimeTime > CURRENT_TIME ))
             """)
     List<Showtime> findAllByTheatreId(@Param("theatreId") int theatreId);
 
@@ -27,6 +29,8 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
             JOIN FETCH sc.theatre t
             JOIN FETCH s.movie m
             WHERE m.movieId = :movieId
+            AND (s.showtimeDate > CURRENT_DATE
+                    OR (s.showtimeDate = CURRENT_DATE AND s.showtimeTime > CURRENT_TIME ))
 """)
     List<Showtime> findByMovie_MovieId(int movieId);
 }
