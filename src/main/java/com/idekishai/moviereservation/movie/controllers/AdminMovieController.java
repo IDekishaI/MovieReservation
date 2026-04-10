@@ -23,6 +23,7 @@ public class AdminMovieController {
     public ResponseEntity<MovieDTO> saveDish(@Valid @RequestBody MovieRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(movieService.saveMovie(dto));
     }
+
     @PutMapping("/{movieId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MovieDTO> updateMovie(@PathVariable int movieId,

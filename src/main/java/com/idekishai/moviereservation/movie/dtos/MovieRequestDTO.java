@@ -10,4 +10,5 @@ public record MovieRequestDTO(
         short movieLength,
         @NotBlank(message = "Movie type cannot be blank")
         String movieType
-) {}
+) {
+}

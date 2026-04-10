@@ -8,6 +8,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Integer> {
-    @Query("SELECT COUNT(s) > 0 FROM Showtime s WHERE s.movie.movieId = :movieId")
+    @Query("""
+                    SELECT COUNT(s) > 0
+                    FROM Showtime s
+                    WHERE s.movie.movieId = :movieId
+            """)
     boolean existsInShowtimes(@Param("movieId") int movieId);
 }
