@@ -35,7 +35,7 @@ public class AdminMovieController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteMovie(@PathVariable int movieId) {
         movieService.deleteMovie(movieId);
-        return ResponseEntity.ok("Movie deleted successfully.");
+        return ResponseEntity.ok("Movie deleted successfully");
     }
 
 }
