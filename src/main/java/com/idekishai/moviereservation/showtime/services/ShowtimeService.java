@@ -1,5 +1,6 @@
 package com.idekishai.moviereservation.showtime.services;
 
+import com.idekishai.moviereservation.common.DateUtils;
 import com.idekishai.moviereservation.movie.entities.Movie;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
 import com.idekishai.moviereservation.screen.entities.Screen;
@@ -72,8 +73,8 @@ public class ShowtimeService {
                 .orElseThrow(() -> new RuntimeException("Screen with id " + dto.screenId() + " not found"));
         showtime.setScreen(screen);
 
-        showtime.setShowtimeDate(dto.showtimeDate());
-        showtime.setShowtimeTime(dto.showtimeTime());
+        showtime.setShowtimeDate(DateUtils.parseStringToLocalDate(dto.showtimeDate()));
+        showtime.setShowtimeTime(DateUtils.parseStringToLocalTime(dto.showtimeTime()));
         showtime.setPrice(dto.price());
     }
 }
