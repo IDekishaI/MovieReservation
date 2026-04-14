@@ -12,8 +12,12 @@ import com.idekishai.moviereservation.showtime.mappers.ShowtimeMapper;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -38,6 +42,9 @@ public class ShowtimeService {
 
         mapDtoToShowtime(showtime, dto);
 
+        if(overlapsPreviousShowtime(dto))
+            throw new RuntimeException("Screen is occupied during that time");
+
         Showtime saved = showtimeRepo.save(showtime);
         return showtimeMapper.toShowtimeDisplayDTO(saved);
     }
@@ -48,6 +55,9 @@ public class ShowtimeService {
                 .orElseThrow(() -> new RuntimeException("Showtime with id " + showtimeId + " not found"));
 
         mapDtoToShowtime(showtime, dto);
+
+        if(overlapsPreviousShowtime(dto))
+            throw new RuntimeException("Screen is occupied during that time");
 
         Showtime saved = showtimeRepo.save(showtime);
         return showtimeMapper.toShowtimeDisplayDTO(saved);
@@ -76,5 +86,24 @@ public class ShowtimeService {
         showtime.setShowtimeDate(DateUtils.parseStringToLocalDate(dto.showtimeDate()));
         showtime.setShowtimeTime(DateUtils.parseStringToLocalTime(dto.showtimeTime()));
         showtime.setPrice(dto.price());
+    }
+
+    private boolean overlapsPreviousShowtime(ShowtimeRequestDTO dto){
+        LocalDate showtimeDate = DateUtils.parseStringToLocalDate(dto.showtimeDate());
+        LocalTime showtimeTime = DateUtils.parseStringToLocalTime(dto.showtimeTime());
+        Showtime previousShowtime = showtimeRepo
+                .findClosestPastShowtime(dto.screenId(), showtimeDate, showtimeTime, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        if(previousShowtime == null)
+            return false;
+
+        LocalDateTime previousShowtimeDateTime = LocalDateTime.of(previousShowtime.getShowtimeDate(), previousShowtime.getShowtimeTime());
+
+        LocalDateTime showtimeDateTime = LocalDateTime.of(showtimeDate, showtimeTime);
+
+        return previousShowtimeDateTime.plusMinutes(previousShowtime.getMovie().getMovieLength()).isAfter(showtimeDateTime);
     }
 }

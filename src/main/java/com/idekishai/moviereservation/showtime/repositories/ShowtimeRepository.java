@@ -1,11 +1,14 @@
 package com.idekishai.moviereservation.showtime.repositories;
 
 import com.idekishai.moviereservation.showtime.entities.Showtime;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Repository
@@ -40,4 +43,21 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
                         WHERE sr.showtime.showtimeId = :showtimeId
             """)
     boolean existsInSeat_Reservations(int showtimeId);
+
+    @SuppressWarnings("JpaQlInspection")
+    @Query("""
+                SELECT s FROM Showtime s
+                WHERE s.screen.screenId = :screenId
+                AND (
+                    s.showtimeDate < :date
+                    OR (s.showtimeDate = :date AND s.showtimeTime < CAST(:time AS TIME))
+                )
+                ORDER BY s.showtimeDate DESC, s.showtimeTime DESC
+            """)
+    List<Showtime> findClosestPastShowtime(
+            int screenId,
+            LocalDate date,
+            LocalTime time,
+            Pageable pageable
+    );
 }
