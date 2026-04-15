@@ -18,12 +18,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/seats")
 public class SeatReservationController {
     private final SeatReservationService seatReservationService;
+
     @PostMapping("/lock")
-    public ResponseEntity<SeatReservationDTO> lockSeat(@RequestBody @Valid ReservationRequestDTO reservationRequestDTO){
+    public ResponseEntity<SeatReservationDTO> lockSeat(@RequestBody @Valid ReservationRequestDTO reservationRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(seatReservationService.lockSeat(reservationRequestDTO));
     }
+
     @PatchMapping("/book")
-    public ResponseEntity<BookingConfirmationDTO> bookSeat(@RequestBody @Valid BookingRequestDTO bookingRequestDTO){
+    public ResponseEntity<BookingConfirmationDTO> bookSeat(@RequestBody @Valid BookingRequestDTO bookingRequestDTO) {
         return ResponseEntity.ok(seatReservationService.bookSeat(bookingRequestDTO));
     }
 }
