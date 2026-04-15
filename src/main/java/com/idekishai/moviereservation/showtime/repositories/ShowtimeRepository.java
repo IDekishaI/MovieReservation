@@ -60,4 +60,20 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
             LocalTime time,
             Pageable pageable
     );
+    @SuppressWarnings("JpaQlInspection")
+    @Query("""
+                SELECT s FROM Showtime s
+                WHERE s.screen.screenId = :screenId
+                AND (
+                    s.showtimeDate > :date
+                    OR (s.showtimeDate = :date AND s.showtimeTime > CAST(:time AS TIME))
+                )
+                ORDER BY s.showtimeDate ASC, s.showtimeTime ASC
+            """)
+    List<Showtime> findClosestFutureShowtime(
+            int screenId,
+            LocalDate date,
+            LocalTime time,
+            Pageable pageable
+    );
 }

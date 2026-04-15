@@ -42,8 +42,7 @@ public class ShowtimeService {
 
         mapDtoToShowtime(showtime, dto);
 
-        if(overlapsPreviousShowtime(dto))
-            throw new RuntimeException("Screen is occupied during that time");
+        overlapsShowtime(dto, showtime.getMovie().getMovieLength());
 
         Showtime saved = showtimeRepo.save(showtime);
         return showtimeMapper.toShowtimeDisplayDTO(saved);
@@ -56,8 +55,7 @@ public class ShowtimeService {
 
         mapDtoToShowtime(showtime, dto);
 
-        if(overlapsPreviousShowtime(dto))
-            throw new RuntimeException("Screen is occupied during that time");
+        overlapsShowtime(dto, showtime.getMovie().getMovieLength());
 
         Showtime saved = showtimeRepo.save(showtime);
         return showtimeMapper.toShowtimeDisplayDTO(saved);
@@ -88,7 +86,7 @@ public class ShowtimeService {
         showtime.setPrice(dto.price());
     }
 
-    private boolean overlapsPreviousShowtime(ShowtimeRequestDTO dto){
+    private void overlapsShowtime(ShowtimeRequestDTO dto, int movieLength){
         LocalDate showtimeDate = DateUtils.parseStringToLocalDate(dto.showtimeDate());
         LocalTime showtimeTime = DateUtils.parseStringToLocalTime(dto.showtimeTime());
         Showtime previousShowtime = showtimeRepo
@@ -97,13 +95,26 @@ public class ShowtimeService {
                 .findFirst()
                 .orElse(null);
 
-        if(previousShowtime == null)
-            return false;
-
-        LocalDateTime previousShowtimeDateTime = LocalDateTime.of(previousShowtime.getShowtimeDate(), previousShowtime.getShowtimeTime());
-
         LocalDateTime showtimeDateTime = LocalDateTime.of(showtimeDate, showtimeTime);
 
-        return previousShowtimeDateTime.plusMinutes(previousShowtime.getMovie().getMovieLength()).isAfter(showtimeDateTime);
+        if(previousShowtime != null) {
+            LocalDateTime previousShowtimeDateTime = LocalDateTime.of(previousShowtime.getShowtimeDate(), previousShowtime.getShowtimeTime());
+
+            if(previousShowtimeDateTime.plusMinutes(previousShowtime.getMovie().getMovieLength()).isAfter(showtimeDateTime))
+                throw new RuntimeException("Screen is occupied during that time");
+        }
+
+        Showtime futureShowtime = showtimeRepo
+                .findClosestFutureShowtime(dto.screenId(), showtimeDate, showtimeTime, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElse(null);
+        if(futureShowtime != null) {
+            LocalDateTime futureShowtimeDateTime = LocalDateTime.of(futureShowtime.getShowtimeDate(), futureShowtime.getShowtimeTime());
+
+            if(showtimeDateTime.plusMinutes(movieLength).isAfter(futureShowtimeDateTime))
+                throw new RuntimeException("Screen is occupied during that time");
+        }
+
     }
 }
