@@ -28,4 +28,8 @@ public interface SeatReservationRepository extends JpaRepository<SeatReservation
             AND sr.lockedUntil < :now
             """)
     int deleteExpiredLocks(@Param("now") LocalDateTime now);
+
+    List<SeatReservation> findByShowtime_ShowtimeId(int showtimeId);
+
+    List<SeatReservation> findByLockedBy(String email);
 }

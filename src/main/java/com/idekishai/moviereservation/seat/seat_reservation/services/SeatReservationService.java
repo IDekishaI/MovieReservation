@@ -9,6 +9,7 @@ import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestD
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.SeatReservationDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
+import com.idekishai.moviereservation.seat.seat_reservation.mappers.SeatReservationMapper;
 import com.idekishai.moviereservation.seat.seat_reservation.payment.entities.Payment;
 import com.idekishai.moviereservation.seat.seat_reservation.payment.services.PaymentService;
 import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatReservationRepository;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -29,6 +31,7 @@ public class SeatReservationService {
     private final SeatRepository seatRepository;
     private final ShowtimeRepository showtimeRepository;
     private final PaymentService paymentService;
+    private final SeatReservationMapper seatReservationMapper;
 
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
         Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new RuntimeException("Seat with id not found"));
@@ -104,5 +107,25 @@ public class SeatReservationService {
                 cardHolderName,
                 lastFourDigits,
                 payment.getPaidAt());
+    }
+
+    public List<SeatReservationDTO> getAllReservationsForShowtime(int showtimeId) {
+        return seatReservationMapper.toDtoList(seatReservationRepository.findByShowtime_ShowtimeId(showtimeId));
+    }
+
+    public List<SeatReservationDTO> getAllReservationsForEmail(String email) {
+        return seatReservationMapper.toDtoList(seatReservationRepository.findByLockedBy(email));
+    }
+
+    @Transactional
+    public SeatReservationDTO cancelReservation(int seatReservationId) {
+        SeatReservation seatReservation = seatReservationRepository.findById(seatReservationId).orElseThrow(() -> new RuntimeException("Seat Reservation Id doesn't exist"));
+
+        seatReservation.setStatus(ReservationStatus.CANCELED);
+
+        paymentService.deletePayment(seatReservationId);
+
+        SeatReservation saved = seatReservationRepository.save(seatReservation);
+        return seatReservationMapper.toDto(saved);
     }
 }

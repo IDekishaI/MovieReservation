@@ -13,6 +13,7 @@ import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatRes
 import com.idekishai.moviereservation.showtime.entities.Showtime;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -94,5 +95,9 @@ public class SeatService {
         seat.setSeatColumn(dto.seatColumn());
         seat.setSeatType(dto.seatType());
         seat.setInUse(dto.inUse());
+    }
+
+    public List<SeatDTO> getSeatsByScreenId(@Positive int screenId) {
+        return seatMapper.toDtoList(seatRepository.findByScreen_ScreenId(screenId));
     }
 }

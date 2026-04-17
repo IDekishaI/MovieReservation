@@ -27,6 +27,12 @@ public class AdminSeatController {
         return ResponseEntity.ok(seatService.getAllSeats());
     }
 
+    @GetMapping("/{screenId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SeatDTO>> getAllSeats(@PathVariable @Positive int screenId) {
+        return ResponseEntity.ok(seatService.getSeatsByScreenId(screenId));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SeatDTO> saveSeat(@Valid @RequestBody SeatRequestDTO dto) {

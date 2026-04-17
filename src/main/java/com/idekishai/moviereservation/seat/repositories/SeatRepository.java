@@ -19,4 +19,6 @@ public interface SeatRepository extends JpaRepository<Seat, Integer> {
     boolean existsByScreen_screenIdAndSeatRowAndSeatColumn(int screenId, char seatRow, int seatColumn);
 
     List<Seat> findByScreen_ScreenIdAndInUseTrue(int screenId);
+
+    List<Seat> findByScreen_ScreenId(int screenId);
 }

@@ -31,4 +31,10 @@ public class PaymentService {
 
         return paymentRepository.save(payment);
     }
+
+    public void deletePayment(int seatReservationId) {
+        Payment payment = paymentRepository.findBySeatReservation_SeatReservationId(seatReservationId)
+                .orElseThrow(() -> new RuntimeException("Payment for reservation " + seatReservationId + " not found"));
+        paymentRepository.delete(payment);
+    }
 }
