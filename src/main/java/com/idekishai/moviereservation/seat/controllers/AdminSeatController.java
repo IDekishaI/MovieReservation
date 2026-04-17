@@ -4,6 +4,7 @@ import com.idekishai.moviereservation.seat.dtos.SeatDTO;
 import com.idekishai.moviereservation.seat.dtos.SeatRequestDTO;
 import com.idekishai.moviereservation.seat.services.SeatService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,13 +35,13 @@ public class AdminSeatController {
 
     @PutMapping("/{seatId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SeatDTO> updateSeat(@PathVariable int seatId, @Valid @RequestBody SeatRequestDTO dto) {
+    public ResponseEntity<SeatDTO> updateSeat(@PathVariable @Positive int seatId, @Valid @RequestBody SeatRequestDTO dto) {
         return ResponseEntity.ok(seatService.updateSeat(seatId, dto));
     }
 
     @DeleteMapping("/{seatId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteSeat(@PathVariable int seatId) {
+    public ResponseEntity<String> deleteSeat(@PathVariable @Positive int seatId) {
         seatService.deleteSeat(seatId);
         return ResponseEntity.ok("Seat deleted successfully");
     }

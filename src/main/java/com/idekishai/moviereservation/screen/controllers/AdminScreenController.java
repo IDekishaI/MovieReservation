@@ -4,6 +4,7 @@ import com.idekishai.moviereservation.screen.dtos.ScreenDTO;
 import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.screen.services.ScreenService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,13 +35,13 @@ public class AdminScreenController {
 
     @PutMapping("/{screenId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ScreenDTO> updateScreen(@PathVariable int screenId, @RequestBody @Valid ScreenRequestDTO dto){
+    public ResponseEntity<ScreenDTO> updateScreen(@PathVariable @Positive int screenId, @RequestBody @Valid ScreenRequestDTO dto){
         return ResponseEntity.ok(screenService.updateScreen(screenId, dto));
     }
 
     @DeleteMapping("/{screenId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteScreen(@PathVariable int screenId){
+    public ResponseEntity<String> deleteScreen(@PathVariable @Positive int screenId){
         screenService.deleteScreen(screenId);
         return ResponseEntity.ok("Screen deleted successfully");
     }

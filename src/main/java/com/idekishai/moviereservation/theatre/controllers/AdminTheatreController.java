@@ -4,6 +4,7 @@ import com.idekishai.moviereservation.theatre.dtos.TheatreDTO;
 import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import com.idekishai.moviereservation.theatre.services.TheatreService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +27,13 @@ public class AdminTheatreController {
 
     @PutMapping("/{theatreId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TheatreDTO> updateTheatre(@PathVariable int theatreId, @Valid @RequestBody TheatreRequestDTO dto) {
+    public ResponseEntity<TheatreDTO> updateTheatre(@PathVariable @Positive int theatreId, @Valid @RequestBody TheatreRequestDTO dto) {
         return ResponseEntity.ok(theatreService.updateTheatre(theatreId, dto));
     }
 
     @DeleteMapping("/{theatreId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteTheatre(@PathVariable int theatreId) {
+    public ResponseEntity<String> deleteTheatre(@PathVariable @Positive int theatreId) {
         theatreService.deleteTheatre(theatreId);
         return ResponseEntity.ok("Theatre deleted successfully");
     }

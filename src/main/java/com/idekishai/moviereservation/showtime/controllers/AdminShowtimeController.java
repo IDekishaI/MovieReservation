@@ -4,6 +4,7 @@ import com.idekishai.moviereservation.showtime.dtos.ShowtimeDisplayDTO;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.showtime.services.ShowtimeService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +27,13 @@ public class AdminShowtimeController {
 
     @PutMapping("/{showtimeId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ShowtimeDisplayDTO> updateShowtime(@PathVariable int showtimeId, @Valid @RequestBody ShowtimeRequestDTO dto) {
+    public ResponseEntity<ShowtimeDisplayDTO> updateShowtime(@PathVariable @Positive int showtimeId, @Valid @RequestBody ShowtimeRequestDTO dto) {
         return ResponseEntity.ok(showtimeService.updateShowtime(showtimeId, dto));
     }
 
     @DeleteMapping("/{showtimeId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteShowtime(@PathVariable int showtimeId) {
+    public ResponseEntity<String> deleteShowtime(@PathVariable @Positive int showtimeId) {
         showtimeService.deleteShowtime(showtimeId);
         return ResponseEntity.ok("Showtime deleted successfully");
     }

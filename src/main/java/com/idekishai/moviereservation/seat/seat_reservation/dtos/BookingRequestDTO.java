@@ -10,13 +10,13 @@ public record BookingRequestDTO(
         @NotBlank(message = "Card Holder Name cannot be blank")
         String cardHolderName,
         @NotBlank
-        @Pattern(regexp = "^[0,9]{16}$", message = "Card number must be 16 digits")
+        @Pattern(regexp = "^[0-9]{16}$", message = "Card number must be 16 digits")
         String cardNumber,
         @NotBlank
         @Pattern(regexp = "^(0[1-9]|1[0-2])/([0-9]{2})$", message = "Invalid expiry date format. Use MM/YY")
         String expiryDate,
         @NotBlank
-        @Pattern(regexp = "^[0,9]{3,4}$", message = "CVV must be 3 or 4 digits")
+        @Pattern(regexp = "^[0-9]{3,4}$", message = "CVV must be 3 or 4 digits")
         String cvv
 ) {
 }
