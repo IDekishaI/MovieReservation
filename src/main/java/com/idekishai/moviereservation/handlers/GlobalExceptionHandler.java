@@ -1,6 +1,7 @@
 package com.idekishai.moviereservation.handlers;
 
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,9 +17,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+
+        log.warn("Business logic error: {}", ex.getMessage());
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", ex.getMessage());
@@ -28,6 +33,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+
+        log.error("Unexpected error occurred {}", ex);
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", "An unexpected error occurred.");
@@ -39,7 +47,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleResponseStatusException(
             ResponseStatusException ex) {
 
-        System.out.println("Business logic error: {}" + ex.getReason());
+        log.warn("Response status exception: {}", ex.getReason());
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
@@ -53,7 +61,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
 
-        System.out.println("Validation error occurred: {}" + ex.getMessage());
+        log.warn("Validation failed: {}", ex.getBindingResult().getAllErrors());
 
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -73,6 +81,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+
+        log.warn("Type mismatch for parameter {}: {}", ex.getName(), ex.getValue());
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'");
@@ -82,7 +93,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
-        System.out.println("Validation error occurred: " + ex.getMessage());
+
+        log.warn("Constraint violation: {}", ex.getMessage());
 
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getConstraintViolations().forEach(violation -> {
@@ -103,6 +115,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+
+        log.warn("Malformed request body: {}", ex.getMessage());
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", "Malformed JSON or invalid field type");

@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -17,6 +18,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtService jwtService;
     private final UserRepository userRepository;
@@ -31,7 +33,20 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
-        User user = userRepository.findById(email).orElseGet(() -> userRepository.save(new User(email, Role.USER)));
+        if (email == null)
+            throw new RuntimeException("email is Null");
+
+        boolean isNewUser = !userRepository.existsById(email);
+
+        User user;
+
+        if (isNewUser) {
+            user = userRepository.save(new User(email, Role.USER));
+            log.info("New user registered via Google: {}", email);
+        } else {
+            user = userRepository.findById(email).orElseThrow();
+            log.info("Existing user logged in via Google: {}", email);
+        }
 
         String jwt = jwtService.generateToken(email, name, user.getRole().name());
 

@@ -17,6 +17,7 @@ import com.idekishai.moviereservation.showtime.entities.Showtime;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class SeatReservationService {
     private final SeatReservationRepository seatReservationRepository;
     private final SeatRepository seatRepository;
@@ -57,6 +59,8 @@ public class SeatReservationService {
         reservation.setLockedUntil(lockedUntil);
 
         SeatReservation saved = seatReservationRepository.save(reservation);
+
+        log.info("User {} has successfully locked seat {} for showtime {}", lockedBy, seat.getSeatId(), showtime.getShowtimeId());
 
         return new SeatReservationDTO(
                 saved.getSeatReservationId(),
@@ -95,6 +99,9 @@ public class SeatReservationService {
         String lastFourDigits = dto.cardNumber().substring(dto.cardNumber().length() - 4);
 
         seatReservationRepository.save(seatReservation);
+
+        log.info("User {} has successfully booked seat {} for showtime {}", currentUserEmail, seatReservation.getSeat().getSeatId(), seatReservation.getShowtime().getShowtimeId());
+
         Payment payment = paymentService.savePayment(dto);
 
         return new BookingConfirmationDTO(seatReservationId,
@@ -126,6 +133,9 @@ public class SeatReservationService {
         paymentService.deletePayment(seatReservationId);
 
         SeatReservation saved = seatReservationRepository.save(seatReservation);
+
+        log.info("Seat reservation {} has been successfully canceled", seatReservationId);
+
         return seatReservationMapper.toDto(saved);
     }
 }
