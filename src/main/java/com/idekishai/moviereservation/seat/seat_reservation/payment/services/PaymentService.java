@@ -24,7 +24,7 @@ public class PaymentService {
 
         SeatReservation seatReservation = seatReservationRepository.findById(dto.seatReservationId()).orElseThrow(() -> new RuntimeException("Seat Reservation Id not found."));
         payment.setSeatReservation(seatReservation);
-        payment.setCardHolderName(dto.cardHolderName());
+        payment.setCardHolderName(dto.cardHolderName().trim());
 
         String lastFourDigits = dto.cardNumber().substring(dto.cardNumber().length() - 4);
         payment.setLastFourDigits(lastFourDigits);

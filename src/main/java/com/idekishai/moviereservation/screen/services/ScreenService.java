@@ -60,7 +60,7 @@ public class ScreenService {
         Theatre theatre = theatreRepository.findById(dto.theatreId())
                 .orElseThrow(() -> new RuntimeException("Theatre with id " + dto.theatreId() + " not found"));
         screen.setTheatre(theatre);
-        screen.setScreenName(dto.screenName());
+        screen.setScreenName(dto.screenName().trim());
         screen.setTotalSeats(dto.totalSeats());
     }
 }
