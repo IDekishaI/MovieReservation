@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Validated
-@RequestMapping("/seats/reservations")
+@RequestMapping("/reservations")
 public class AdminSeatReservationController {
     private final SeatReservationService seatReservationService;
 

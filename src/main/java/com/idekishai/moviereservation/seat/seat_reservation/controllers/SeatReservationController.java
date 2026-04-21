@@ -1,5 +1,6 @@
 package com.idekishai.moviereservation.seat.seat_reservation.controllers;
 
+import com.idekishai.moviereservation.common.SecurityUtils;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingConfirmationDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
@@ -12,12 +13,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @Validated
-@RequestMapping("/seats")
+@RequestMapping("/reservations")
 public class SeatReservationController {
     private final SeatReservationService seatReservationService;
+
+    @GetMapping("/me")
+    public ResponseEntity<List<SeatReservationDTO>> getMyReservations() {
+        String email = SecurityUtils.getCurrentUserEmail();
+        return ResponseEntity.ok(seatReservationService.getAllReservationsForEmail(email));
+    }
 
     @PostMapping("/lock")
     public ResponseEntity<SeatReservationDTO> lockSeat(@RequestBody @Valid ReservationRequestDTO reservationRequestDTO) {

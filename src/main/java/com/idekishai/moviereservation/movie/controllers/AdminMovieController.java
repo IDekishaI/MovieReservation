@@ -21,7 +21,7 @@ public class AdminMovieController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MovieDTO> saveDish(@Valid @RequestBody MovieRequestDTO dto) {
+    public ResponseEntity<MovieDTO> saveMovie(@Valid @RequestBody MovieRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(movieService.saveMovie(dto));
     }
 
