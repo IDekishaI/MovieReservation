@@ -3,6 +3,8 @@ package com.idekishai.moviereservation.theatre.services;
 import com.idekishai.moviereservation.theatre.dtos.TheatreDTO;
 import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import com.idekishai.moviereservation.theatre.entities.Theatre;
+import com.idekishai.moviereservation.theatre.exceptions.TheatreInUseException;
+import com.idekishai.moviereservation.theatre.exceptions.TheatreNotFoundException;
 import com.idekishai.moviereservation.theatre.mappers.TheatreMapper;
 import com.idekishai.moviereservation.theatre.repositories.TheatreRepository;
 import jakarta.transaction.Transactional;
@@ -35,7 +37,7 @@ public class TheatreService {
     @Transactional
     public TheatreDTO updateTheatre(int theatreId, TheatreRequestDTO dto) {
         Theatre theatre = theatreRepo.findById(theatreId)
-                .orElseThrow(() -> new RuntimeException("Theatre with id " + theatreId + " not found"));
+                .orElseThrow(() -> new TheatreNotFoundException(theatreId));
 
         theatre.setTheatreName(dto.theatreName().trim());
         theatre.setTheatreAddress(dto.theatreAddress().trim());
@@ -48,10 +50,10 @@ public class TheatreService {
     @Transactional
     public void deleteTheatre(int theatreId) {
         if (!theatreRepo.existsById(theatreId))
-            throw new RuntimeException("Theatre with id " + theatreId + " not found");
+            throw new TheatreNotFoundException(theatreId);
 
         if (theatreRepo.existsInScreens(theatreId))
-            throw new RuntimeException("Theatre has existing screens and cannot be deleted");
+            throw new TheatreInUseException(theatreId);
 
         theatreRepo.deleteById(theatreId);
     }

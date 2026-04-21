@@ -6,6 +6,7 @@ import com.idekishai.moviereservation.screen.entities.Screen;
 import com.idekishai.moviereservation.screen.mappers.ScreenMapper;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
 import com.idekishai.moviereservation.theatre.entities.Theatre;
+import com.idekishai.moviereservation.theatre.exceptions.TheatreNotFoundException;
 import com.idekishai.moviereservation.theatre.repositories.TheatreRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class ScreenService {
 
     private void mapDtoToScreen(Screen screen, ScreenRequestDTO dto){
         Theatre theatre = theatreRepository.findById(dto.theatreId())
-                .orElseThrow(() -> new RuntimeException("Theatre with id " + dto.theatreId() + " not found"));
+                .orElseThrow(() -> new TheatreNotFoundException(dto.theatreId()));
         screen.setTheatre(theatre);
         screen.setScreenName(dto.screenName().trim());
         screen.setTotalSeats(dto.totalSeats());

@@ -2,6 +2,7 @@ package com.idekishai.moviereservation.showtime.services;
 
 import com.idekishai.moviereservation.common.DateUtils;
 import com.idekishai.moviereservation.movie.entities.Movie;
+import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
 import com.idekishai.moviereservation.screen.entities.Screen;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
@@ -74,7 +75,7 @@ public class ShowtimeService {
 
     private void mapDtoToShowtime(Showtime showtime, ShowtimeRequestDTO dto) {
         Movie movie = movieRepository.findById(dto.movieId())
-                .orElseThrow(() -> new RuntimeException("Movie with id " + dto.movieId() + " not found"));
+                .orElseThrow(() -> new MovieNotFoundException(dto.movieId()));
         showtime.setMovie(movie);
 
         Screen screen = screenRepository.findById(dto.screenId())

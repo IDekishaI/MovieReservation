@@ -1,5 +1,9 @@
 package com.idekishai.moviereservation.handlers;
 
+import com.idekishai.moviereservation.movie.exceptions.MovieInUseException;
+import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
+import com.idekishai.moviereservation.theatre.exceptions.TheatreInUseException;
+import com.idekishai.moviereservation.theatre.exceptions.TheatreNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -123,5 +127,31 @@ public class GlobalExceptionHandler {
         response.put("message", "Malformed JSON or invalid field type");
         response.put("timestamp", LocalDateTime.now());
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler({
+            MovieNotFoundException.class,
+            TheatreNotFoundException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleNotFoundException(RuntimeException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler({
+            MovieInUseException.class,
+            TheatreInUseException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleConflictException(RuntimeException ex) {
+        log.warn("Resource in use: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }
