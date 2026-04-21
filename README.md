@@ -1,5 +1,5 @@
 # Movie Reservation API
-> 🚧 **Work in Progress** — Admin features, pagination, and custom error handling coming soon.
+> 🚧 **Work in Progress** — custom exceptions, pagination, rate limiting, integration tests, and showtime cancellation with email notifications coming soon.
 
 A **Spring Boot REST API** for browsing movies, finding showtimes, and reserving cinema seats. The system handles the full reservation lifecycle — from seat locking with time-limited holds to payment confirmation — secured with **Google OAuth2 and JWT authentication**.
 
@@ -12,6 +12,8 @@ A **Spring Boot REST API** for browsing movies, finding showtimes, and reserving
 - **Seat Availability** — real-time seat availability per showtime with AVAILABLE/UNAVAILABLE status
 - **Seat Locking** — lock a seat for 5 minutes while deciding, preventing double-booking
 - **Booking & Payment** — confirm a locked seat with card details, stores last 4 digits only
+- **Reservation Cancellation** — admin can cancel BOOKED reservations, deletes associated payment record
+- **My Reservations** — authenticated users can view their own reservation history
 - **Automatic Lock Cleanup** — scheduled job runs every 60 seconds to purge expired locks
 - **Google OAuth2 Authentication** — login via Google, receive a JWT valid for 30 minutes
 - **Swagger UI** — fully documented and testable API at `/swagger-ui/index.html`
@@ -27,10 +29,11 @@ A **Spring Boot REST API** for browsing movies, finding showtimes, and reserving
 | Security | Spring Security, OAuth2, JWT (JJWT 0.11.5) |
 | Database | SQL Server |
 | ORM | Spring Data JPA / Hibernate |
+| Validation | Hibernate Validator |
 | API Docs | SpringDoc OpenAPI (Swagger UI) |
 | Build | Maven |
 | Utilities | Lombok |
-
+ 
 ---
 
 ## Architecture
@@ -55,32 +58,71 @@ A **Spring Boot REST API** for browsing movies, finding showtimes, and reserving
 
 ### Authentication
 ```
-GET  /oauth2/authorization/google   # Redirect to Google login → returns JWT
+GET  /oauth2/authorization/google          # Redirect to Google login → returns JWT
 ```
 
 ### Movies
 ```
-GET  /movies                        # Get all movies
+GET  /movies                               # Get all movies
 ```
 
 ### Theatres
 ```
-GET  /theatres                      # Get all theatres
+GET  /theatres                             # Get all theatres
 ```
 
 ### Showtimes
 ```
-GET  /showtimes/theatre/{theatreId} # Get future showtimes by theatre
-GET  /showtimes/movie/{movieId}     # Get future showtimes by movie
-GET  /showtimes/{showtimeId}        # Get seat availability for a showtime
+GET  /showtimes/theatre/{theatreId}        # Get future showtimes by theatre
+GET  /showtimes/movie/{movieId}            # Get future showtimes by movie
+GET  /showtimes/{showtimeId}               # Get seat availability for a showtime
 ```
 
-### Seat Reservations
+### Reservations
 ```
-POST  /seats/lock                   # Lock a seat for 5 minutes
-PATCH /seats/book                   # Book a locked seat with payment details
+GET    /reservations/me                    # Get current user's reservations
+POST   /reservations/lock                  # Lock a seat for 5 minutes
+PATCH  /reservations/book                  # Book a locked seat with payment details
 ```
 
+### Admin — Movies
+```
+POST    /movies                            # Create a movie
+PUT     /movies/{movieId}                  # Update a movie
+DELETE  /movies/{movieId}                  # Delete a movie
+```
+
+### Admin — Theatres
+```
+POST    /theatre                           # Create a theatre
+PUT     /theatre/{theatreId}               # Update a theatre
+DELETE  /theatre/{theatreId}               # Delete a theatre
+```
+
+### Admin — Screens
+```
+GET     /screens                           # Get all screens
+POST    /screens                           # Create a screen
+PUT     /screens/{screenId}                # Update a screen
+DELETE  /screens/{screenId}                # Delete a screen
+```
+
+### Admin — Seats
+```
+GET     /seats                             # Get all seats
+GET     /seats/{screenId}                  # Get seats by screen
+POST    /seats                             # Create a seat
+PUT     /seats/{seatId}                    # Update a seat
+DELETE  /seats/{seatId}                    # Delete a seat
+```
+
+### Admin — Reservations
+```
+GET     /reservations?email=               # Get reservations by user email
+GET     /reservations/{showtimeId}         # Get reservations by showtime
+PATCH   /reservations/{id}/cancel          # Cancel a booking and delete payment record
+```
+ 
 ---
 
 ## Authentication Flow
@@ -129,6 +171,20 @@ To generate a secure JWT secret:
     Keys.secretKeyFor(SignatureAlgorithm.HS256).getEncoded()));
 ```
 
+### Profiles
+
+The project uses Spring Boot profiles to separate dev and prod configuration.
+
+| Property | dev | prod |
+|---|---|---|
+| `ddl-auto` | `update` | `validate` |
+| `show-sql` | `true` | `false` |
+
+Active profile is set in `application.properties`:
+```
+spring.profiles.active=dev
+```
+
 ### Run
 
 ```bash
@@ -137,7 +193,8 @@ cd MovieReservation
 mvn spring-boot:run
 ```
 
-The API will be available at `http://localhost:8080`.
+The API will be available at `http://localhost:8080`. 
+
 Swagger UI is available at `http://localhost:8080/swagger-ui/index.html`.
 
 ---
@@ -146,14 +203,15 @@ Swagger UI is available at `http://localhost:8080/swagger-ui/index.html`.
 
 | Table | Description |
 |---|---|
+| `users` | Registered users via Google OAuth2 |
 | `movie` | Movie catalogue |
 | `theatre` | Cinema locations |
 | `screen` | Screens within a theatre |
 | `seat` | Individual seats per screen |
 | `showtime` | Scheduled screenings |
-| `seat_reservation` | Seat locks and bookings |
+| `seat_reservation` | Seat locks, bookings, and cancellations |
 | `payment` | Payment records for confirmed bookings |
-
+ 
 ---
 
 ## Key Design Decisions
@@ -165,6 +223,8 @@ Swagger UI is available at `http://localhost:8080/swagger-ui/index.html`.
 **Stateless Authentication** — no server-side sessions. Google OAuth2 handles identity verification, after which a JWT is issued. Every subsequent request is authenticated purely via the token in the `Authorization` header.
 
 **Payment Data** — only the last four digits of the card number are stored. CVV is never persisted. This follows standard PCI-DSS best practices even in a demonstration context.
+
+**Validation** — all request bodies are validated via Hibernate Validator. Path variables are validated with `@Positive`. A centralized `GlobalExceptionHandler` handles all validation, type mismatch, and business logic errors with consistent JSON responses.
 
 ---
 
