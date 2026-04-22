@@ -2,6 +2,11 @@ package com.idekishai.moviereservation.handlers;
 
 import com.idekishai.moviereservation.movie.exceptions.MovieInUseException;
 import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
+import com.idekishai.moviereservation.screen.exceptions.ScreenInUseException;
+import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
+import com.idekishai.moviereservation.screen.exceptions.ScreenSchedulingConflictException;
+import com.idekishai.moviereservation.showtime.exceptions.ShowtimeInUseException;
+import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreInUseException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -131,7 +136,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             MovieNotFoundException.class,
-            TheatreNotFoundException.class
+            TheatreNotFoundException.class,
+            ScreenNotFoundException.class,
+            ShowtimeNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleNotFoundException(RuntimeException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
@@ -144,10 +151,22 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             MovieInUseException.class,
-            TheatreInUseException.class
+            TheatreInUseException.class,
+            ScreenInUseException.class,
+            ShowtimeInUseException.class
     })
     public ResponseEntity<Map<String, Object>> handleConflictException(RuntimeException ex) {
         log.warn("Resource in use: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(ScreenSchedulingConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleSchedulingConflict(ScreenSchedulingConflictException ex) {
+        log.warn("Scheduling conflict: {}", ex.getMessage());
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", ex.getMessage());

@@ -5,10 +5,14 @@ import com.idekishai.moviereservation.movie.entities.Movie;
 import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
 import com.idekishai.moviereservation.screen.entities.Screen;
+import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
+import com.idekishai.moviereservation.screen.exceptions.ScreenSchedulingConflictException;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeDisplayDTO;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.showtime.entities.Showtime;
+import com.idekishai.moviereservation.showtime.exceptions.ShowtimeInUseException;
+import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
 import com.idekishai.moviereservation.showtime.mappers.ShowtimeMapper;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
@@ -52,7 +56,7 @@ public class ShowtimeService {
     @Transactional
     public ShowtimeDisplayDTO updateShowtime(int showtimeId, ShowtimeRequestDTO dto) {
         Showtime showtime = showtimeRepo.findById(showtimeId)
-                .orElseThrow(() -> new RuntimeException("Showtime with id " + showtimeId + " not found"));
+                .orElseThrow(() -> new ShowtimeNotFoundException(showtimeId));
 
         mapDtoToShowtime(showtime, dto);
 
@@ -65,10 +69,10 @@ public class ShowtimeService {
     @Transactional
     public void deleteShowtime(int showtimeId) {
         if (!showtimeRepo.existsById(showtimeId))
-            throw new RuntimeException("Showtime with id " + showtimeId + " not found");
+            throw new ShowtimeNotFoundException(showtimeId);
 
         if (showtimeRepo.existsInSeat_Reservations(showtimeId))
-            throw new RuntimeException("Showtime is being used in existing seat reservations and cannot be deleted");
+            throw new ShowtimeInUseException(showtimeId);
 
         showtimeRepo.deleteById(showtimeId);
     }
@@ -79,7 +83,7 @@ public class ShowtimeService {
         showtime.setMovie(movie);
 
         Screen screen = screenRepository.findById(dto.screenId())
-                .orElseThrow(() -> new RuntimeException("Screen with id " + dto.screenId() + " not found"));
+                .orElseThrow(() -> new ScreenNotFoundException(dto.screenId()));
         showtime.setScreen(screen);
 
         showtime.setShowtimeDate(DateUtils.parseStringToLocalDate(dto.showtimeDate()));
@@ -102,7 +106,7 @@ public class ShowtimeService {
             LocalDateTime previousShowtimeDateTime = LocalDateTime.of(previousShowtime.getShowtimeDate(), previousShowtime.getShowtimeTime());
 
             if(previousShowtimeDateTime.plusMinutes(previousShowtime.getMovie().getMovieLength()).isAfter(showtimeDateTime))
-                throw new RuntimeException("Screen is occupied during that time");
+                throw new ScreenSchedulingConflictException(dto.screenId());
         }
 
         Showtime futureShowtime = showtimeRepo
@@ -114,7 +118,7 @@ public class ShowtimeService {
             LocalDateTime futureShowtimeDateTime = LocalDateTime.of(futureShowtime.getShowtimeDate(), futureShowtime.getShowtimeTime());
 
             if(showtimeDateTime.plusMinutes(movieLength).isAfter(futureShowtimeDateTime))
-                throw new RuntimeException("Screen is occupied during that time");
+                throw new ScreenSchedulingConflictException(dto.screenId());
         }
 
     }

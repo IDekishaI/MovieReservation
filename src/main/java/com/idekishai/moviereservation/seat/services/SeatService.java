@@ -1,6 +1,7 @@
 package com.idekishai.moviereservation.seat.services;
 
 import com.idekishai.moviereservation.screen.entities.Screen;
+import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
 import com.idekishai.moviereservation.seat.dtos.SeatAvailabilityDTO;
 import com.idekishai.moviereservation.seat.dtos.SeatDTO;
@@ -11,6 +12,7 @@ import com.idekishai.moviereservation.seat.mappers.SeatMapper;
 import com.idekishai.moviereservation.seat.repositories.SeatRepository;
 import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatReservationRepository;
 import com.idekishai.moviereservation.showtime.entities.Showtime;
+import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Positive;
@@ -30,9 +32,13 @@ public class SeatService {
     private final ShowtimeRepository showtimeRepository;
 
     public List<SeatAvailabilityDTO> getAvailableSeats(int showtimeId) {
-        Showtime showtime = showtimeRepository.findById(showtimeId).orElseThrow(() -> new RuntimeException("No showtime Id"));
+        Showtime showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(() -> new ShowtimeNotFoundException(showtimeId));
+
         List<Seat> allSeats = seatRepository.findByScreen_ScreenIdAndInUseTrue(showtime.getScreen().getScreenId());
+
         List<Integer> unavailableSeatIds = seatReservationRepository.findUnavailableSeatIds(showtimeId, LocalDateTime.now());
+
         return allSeats.stream()
                 .map(seat -> {
                     SeatStatus status = unavailableSeatIds.contains(seat.getSeatId()) ? SeatStatus.UNAVAILABLE : SeatStatus.AVAILABLE;
@@ -88,7 +94,7 @@ public class SeatService {
 
     private void mapDtoToSeat(Seat seat, SeatRequestDTO dto) {
         Screen screen = screenRepository.findById(dto.screenId())
-                .orElseThrow(() -> new RuntimeException("Screen with id " + dto.screenId() + " not found"));
+                .orElseThrow(() -> new ScreenNotFoundException(dto.screenId()));
 
         seat.setScreen(screen);
         seat.setSeatRow(dto.seatRow().charAt(0));

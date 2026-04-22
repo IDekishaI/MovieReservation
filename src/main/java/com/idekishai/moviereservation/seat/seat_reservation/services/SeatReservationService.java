@@ -14,6 +14,7 @@ import com.idekishai.moviereservation.seat.seat_reservation.payment.entities.Pay
 import com.idekishai.moviereservation.seat.seat_reservation.payment.services.PaymentService;
 import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatReservationRepository;
 import com.idekishai.moviereservation.showtime.entities.Showtime;
+import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +39,8 @@ public class SeatReservationService {
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
         Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new RuntimeException("Seat with id not found"));
 
-        Showtime showtime = showtimeRepository.findById(dto.showtimeId()).orElseThrow(() -> new RuntimeException("Showtime with id not found"));
+        Showtime showtime = showtimeRepository.findById(dto.showtimeId())
+                .orElseThrow(() -> new ShowtimeNotFoundException(dto.showtimeId()));
 
         if (seat.getScreen().getScreenId() != showtime.getScreen().getScreenId())
             throw new RuntimeException("Seat is not inside this screen");

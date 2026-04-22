@@ -3,6 +3,8 @@ package com.idekishai.moviereservation.screen.services;
 import com.idekishai.moviereservation.screen.dtos.ScreenDTO;
 import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.screen.entities.Screen;
+import com.idekishai.moviereservation.screen.exceptions.ScreenInUseException;
+import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
 import com.idekishai.moviereservation.screen.mappers.ScreenMapper;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
 import com.idekishai.moviereservation.theatre.entities.Theatre;
@@ -38,7 +40,7 @@ public class ScreenService {
     @Transactional
     public ScreenDTO updateScreen(int screenId, ScreenRequestDTO dto){
         Screen screen = screenRepository.findById(screenId)
-                .orElseThrow(() -> new RuntimeException("Screen with id " + screenId + " not found"));
+                .orElseThrow(() -> new ScreenNotFoundException(screenId));
 
         mapDtoToScreen(screen, dto);
 
@@ -49,10 +51,10 @@ public class ScreenService {
     @Transactional
     public void deleteScreen(int screenId){
         if(!screenRepository.existsById(screenId))
-            throw new RuntimeException("Screen with id " + screenId + " not found");
+            throw new ScreenNotFoundException(screenId);
 
         if(screenRepository.existsInShowtimes(screenId))
-            throw new RuntimeException("Screen is being used in existing showtimes and cannot be deleted");
+            throw new ScreenInUseException(screenId);
 
         screenRepository.deleteById(screenId);
     }
