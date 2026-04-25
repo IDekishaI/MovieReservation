@@ -5,6 +5,9 @@ import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenInUseException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenSchedulingConflictException;
+import com.idekishai.moviereservation.seat.exceptions.SeatAlreadyExistsException;
+import com.idekishai.moviereservation.seat.exceptions.SeatInUseException;
+import com.idekishai.moviereservation.seat.exceptions.SeatNotFoundException;
 import com.idekishai.moviereservation.showtime.exceptions.ShowtimeInUseException;
 import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreInUseException;
@@ -138,7 +141,8 @@ public class GlobalExceptionHandler {
             MovieNotFoundException.class,
             TheatreNotFoundException.class,
             ScreenNotFoundException.class,
-            ShowtimeNotFoundException.class
+            ShowtimeNotFoundException.class,
+            SeatNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleNotFoundException(RuntimeException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
@@ -153,7 +157,8 @@ public class GlobalExceptionHandler {
             MovieInUseException.class,
             TheatreInUseException.class,
             ScreenInUseException.class,
-            ShowtimeInUseException.class
+            ShowtimeInUseException.class,
+            SeatInUseException.class
     })
     public ResponseEntity<Map<String, Object>> handleConflictException(RuntimeException ex) {
         log.warn("Resource in use: {}", ex.getMessage());
@@ -167,6 +172,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ScreenSchedulingConflictException.class)
     public ResponseEntity<Map<String, Object>> handleSchedulingConflict(ScreenSchedulingConflictException ex) {
         log.warn("Scheduling conflict: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(SeatAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateResourceException(RuntimeException ex) {
+        log.warn("Duplicate resource: {}", ex.getMessage());
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", ex.getMessage());

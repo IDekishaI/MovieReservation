@@ -8,6 +8,9 @@ import com.idekishai.moviereservation.seat.dtos.SeatDTO;
 import com.idekishai.moviereservation.seat.dtos.SeatRequestDTO;
 import com.idekishai.moviereservation.seat.entities.Seat;
 import com.idekishai.moviereservation.seat.enums.SeatStatus;
+import com.idekishai.moviereservation.seat.exceptions.SeatAlreadyExistsException;
+import com.idekishai.moviereservation.seat.exceptions.SeatInUseException;
+import com.idekishai.moviereservation.seat.exceptions.SeatNotFoundException;
 import com.idekishai.moviereservation.seat.mappers.SeatMapper;
 import com.idekishai.moviereservation.seat.repositories.SeatRepository;
 import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatReservationRepository;
@@ -56,7 +59,7 @@ public class SeatService {
         Seat seat = new Seat();
 
         if (seatRepository.existsByScreen_screenIdAndSeatRowAndSeatColumn(dto.screenId(), dto.seatRow().charAt(0), dto.seatColumn()))
-            throw new RuntimeException("Seat already exists at row " + dto.seatRow() + " column " + dto.seatColumn());
+            throw new SeatAlreadyExistsException(dto.seatRow(), dto.seatColumn());
 
         mapDtoToSeat(seat, dto);
 
@@ -67,13 +70,13 @@ public class SeatService {
     @Transactional
     public SeatDTO updateSeat(int seatId, SeatRequestDTO dto) {
         Seat seat = seatRepository.findById(seatId)
-                .orElseThrow(() -> new RuntimeException("Seat with id " + seatId + " not found"));
+                .orElseThrow(() -> new SeatNotFoundException(seatId));
 
         if (seatRepository.existsByScreen_screenIdAndSeatRowAndSeatColumn(dto.screenId(), dto.seatRow().charAt(0), dto.seatColumn()))
-            throw new RuntimeException("Seat already exists at row " + dto.seatRow() + " column " + dto.seatColumn());
+            throw new SeatAlreadyExistsException(dto.seatRow(), dto.seatColumn());
 
         if (seatRepository.existsInSeat_Reservation(seatId))
-            throw new RuntimeException("Seat has existing seat reservations and cannot be changed");
+            throw new SeatInUseException(seatId);
 
         mapDtoToSeat(seat, dto);
 
@@ -84,10 +87,10 @@ public class SeatService {
     @Transactional
     public void deleteSeat(int seatId) {
         if (!seatRepository.existsById(seatId))
-            throw new RuntimeException("Seat with id " + seatId + " not found");
+            throw new SeatNotFoundException(seatId);
 
         if (seatRepository.existsInSeat_Reservation(seatId))
-            throw new RuntimeException("Seat has existing seat reservations and cannot be deleted");
+            throw new SeatInUseException(seatId);
 
         seatRepository.deleteById(seatId);
     }

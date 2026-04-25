@@ -3,6 +3,7 @@ package com.idekishai.moviereservation.seat.seat_reservation.services;
 import com.idekishai.moviereservation.common.SecurityUtils;
 import com.idekishai.moviereservation.seat.entities.Seat;
 import com.idekishai.moviereservation.seat.enums.ReservationStatus;
+import com.idekishai.moviereservation.seat.exceptions.SeatNotFoundException;
 import com.idekishai.moviereservation.seat.repositories.SeatRepository;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingConfirmationDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
@@ -37,7 +38,7 @@ public class SeatReservationService {
     private final SeatReservationMapper seatReservationMapper;
 
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
-        Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new RuntimeException("Seat with id not found"));
+        Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new SeatNotFoundException(dto.seatId()));
 
         Showtime showtime = showtimeRepository.findById(dto.showtimeId())
                 .orElseThrow(() -> new ShowtimeNotFoundException(dto.showtimeId()));
