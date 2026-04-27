@@ -13,4 +13,8 @@ public interface TheatreRepository extends JpaRepository<Theatre, Integer> {
                     WHERE s.theatre.theatreId = :theatreId
             """)
     boolean existsInScreens(int theatreId);
+
+    boolean existsByTheatreNameAndTheatreCity(String theatreName, String theatreCity);
+
+    boolean existsByTheatreNameAndTheatreCityAndTheatreIdNot(String theatreName, String theatreCity, int theatreId);
 }

@@ -72,7 +72,7 @@ public class SeatService {
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new SeatNotFoundException(seatId));
 
-        if (seatRepository.existsByScreen_screenIdAndSeatRowAndSeatColumn(dto.screenId(), dto.seatRow().charAt(0), dto.seatColumn()))
+        if (seatRepository.existsByScreen_screenIdAndSeatRowAndSeatColumnAndSeatIdNot(dto.screenId(), dto.seatRow().charAt(0), dto.seatColumn(), seatId))
             throw new SeatAlreadyExistsException(dto.seatRow(), dto.seatColumn());
 
         if (seatRepository.existsInSeat_Reservation(seatId))

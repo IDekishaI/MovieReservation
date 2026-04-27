@@ -3,6 +3,7 @@ package com.idekishai.moviereservation.screen.services;
 import com.idekishai.moviereservation.screen.dtos.ScreenDTO;
 import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.screen.entities.Screen;
+import com.idekishai.moviereservation.screen.exceptions.ScreenAlreadyExistsException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenInUseException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
 import com.idekishai.moviereservation.screen.mappers.ScreenMapper;
@@ -29,6 +30,9 @@ public class ScreenService {
 
     @Transactional
     public ScreenDTO saveScreen(ScreenRequestDTO dto){
+        if(screenRepository.existsByScreenNameAndTheatre_TheatreId(dto.screenName().trim(), dto.theatreId()))
+            throw new ScreenAlreadyExistsException(dto.screenName().trim(), dto.theatreId());
+
         Screen screen = new Screen();
 
         mapDtoToScreen(screen, dto);
@@ -41,6 +45,9 @@ public class ScreenService {
     public ScreenDTO updateScreen(int screenId, ScreenRequestDTO dto){
         Screen screen = screenRepository.findById(screenId)
                 .orElseThrow(() -> new ScreenNotFoundException(screenId));
+
+        if(screenRepository.existsByScreenNameAndTheatre_TheatreIdAndScreenIdNot(dto.screenName().trim(), dto.theatreId(), screenId))
+            throw new ScreenAlreadyExistsException(dto.screenName().trim(), dto.theatreId());
 
         mapDtoToScreen(screen, dto);
 

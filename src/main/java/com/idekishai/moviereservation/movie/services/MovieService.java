@@ -3,6 +3,7 @@ package com.idekishai.moviereservation.movie.services;
 import com.idekishai.moviereservation.movie.dtos.MovieDTO;
 import com.idekishai.moviereservation.movie.dtos.MovieRequestDTO;
 import com.idekishai.moviereservation.movie.entities.Movie;
+import com.idekishai.moviereservation.movie.exceptions.MovieAlreadyExistsException;
 import com.idekishai.moviereservation.movie.exceptions.MovieInUseException;
 import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
 import com.idekishai.moviereservation.movie.mappers.MovieMapper;
@@ -25,6 +26,9 @@ public class MovieService {
 
     @Transactional
     public MovieDTO saveMovie(MovieRequestDTO dto) {
+        if(movieRepo.existsByMovieName(dto.movieName().trim()))
+            throw new MovieAlreadyExistsException(dto.movieName().trim());
+
         Movie movie = new Movie();
         movie.setMovieName(dto.movieName().trim());
         movie.setMovieLength(dto.movieLength());
@@ -38,6 +42,9 @@ public class MovieService {
     public MovieDTO updateMovie(int movieId, MovieRequestDTO dto) {
         Movie movie = movieRepo.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException(movieId));
+
+        if(movieRepo.existsByMovieNameAndMovieIdNot(dto.movieName().trim(), movieId))
+            throw new MovieAlreadyExistsException(dto.movieName().trim());
 
         movie.setMovieName(dto.movieName().trim());
         movie.setMovieLength(dto.movieLength());

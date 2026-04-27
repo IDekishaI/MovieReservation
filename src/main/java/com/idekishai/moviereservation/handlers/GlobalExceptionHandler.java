@@ -1,7 +1,9 @@
 package com.idekishai.moviereservation.handlers;
 
+import com.idekishai.moviereservation.movie.exceptions.MovieAlreadyExistsException;
 import com.idekishai.moviereservation.movie.exceptions.MovieInUseException;
 import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
+import com.idekishai.moviereservation.screen.exceptions.ScreenAlreadyExistsException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenInUseException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenSchedulingConflictException;
@@ -12,6 +14,7 @@ import com.idekishai.moviereservation.seat.seat_reservation.exceptions.*;
 import com.idekishai.moviereservation.seat.seat_reservation.payment.exceptions.PaymentNotFoundException;
 import com.idekishai.moviereservation.showtime.exceptions.ShowtimeInUseException;
 import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
+import com.idekishai.moviereservation.theatre.exceptions.TheatreAlreadyExistsException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreInUseException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -183,7 +186,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(SeatAlreadyExistsException.class)
+    @ExceptionHandler({
+            SeatAlreadyExistsException.class,
+            TheatreAlreadyExistsException.class,
+            MovieAlreadyExistsException.class,
+            ScreenAlreadyExistsException.class
+    })
     public ResponseEntity<Map<String, Object>> handleDuplicateResourceException(RuntimeException ex) {
         log.warn("Duplicate resource: {}", ex.getMessage());
         Map<String, Object> response = new HashMap<>();

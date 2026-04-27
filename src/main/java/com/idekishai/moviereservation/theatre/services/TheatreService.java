@@ -3,6 +3,7 @@ package com.idekishai.moviereservation.theatre.services;
 import com.idekishai.moviereservation.theatre.dtos.TheatreDTO;
 import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import com.idekishai.moviereservation.theatre.entities.Theatre;
+import com.idekishai.moviereservation.theatre.exceptions.TheatreAlreadyExistsException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreInUseException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreNotFoundException;
 import com.idekishai.moviereservation.theatre.mappers.TheatreMapper;
@@ -25,10 +26,13 @@ public class TheatreService {
 
     @Transactional
     public TheatreDTO saveTheatre(TheatreRequestDTO dto) {
+        if(theatreRepo.existsByTheatreNameAndTheatreCity(dto.theatreName().trim(), dto.theatreCity().trim()))
+            throw new TheatreAlreadyExistsException(dto.theatreName().trim(), dto.theatreCity().trim());
+
         Theatre theatre = new Theatre();
-        theatre.setTheatreName(dto.theatreName());
-        theatre.setTheatreAddress(dto.theatreAddress());
-        theatre.setTheatreCity(dto.theatreCity());
+        theatre.setTheatreName(dto.theatreName().trim());
+        theatre.setTheatreAddress(dto.theatreAddress().trim());
+        theatre.setTheatreCity(dto.theatreCity().trim());
 
         Theatre saved = theatreRepo.save(theatre);
         return theatreMapper.toDto(saved);
@@ -38,6 +42,9 @@ public class TheatreService {
     public TheatreDTO updateTheatre(int theatreId, TheatreRequestDTO dto) {
         Theatre theatre = theatreRepo.findById(theatreId)
                 .orElseThrow(() -> new TheatreNotFoundException(theatreId));
+
+        if(theatreRepo.existsByTheatreNameAndTheatreCityAndTheatreIdNot(dto.theatreName().trim(), dto.theatreCity().trim(), theatreId))
+            throw new TheatreAlreadyExistsException(dto.theatreName().trim(), dto.theatreCity().trim());
 
         theatre.setTheatreName(dto.theatreName().trim());
         theatre.setTheatreAddress(dto.theatreAddress().trim());

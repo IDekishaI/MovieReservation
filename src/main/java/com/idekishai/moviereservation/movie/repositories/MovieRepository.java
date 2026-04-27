@@ -14,4 +14,8 @@ public interface MovieRepository extends JpaRepository<Movie, Integer> {
                     WHERE s.movie.movieId = :movieId
             """)
     boolean existsInShowtimes(@Param("movieId") int movieId);
+
+    boolean existsByMovieName(String movieName);
+
+    boolean existsByMovieNameAndMovieIdNot(String movieName, int movieId);
 }
