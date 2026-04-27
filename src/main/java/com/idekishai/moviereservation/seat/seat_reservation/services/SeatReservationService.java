@@ -10,6 +10,7 @@ import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestD
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.SeatReservationDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
+import com.idekishai.moviereservation.seat.seat_reservation.exceptions.*;
 import com.idekishai.moviereservation.seat.seat_reservation.mappers.SeatReservationMapper;
 import com.idekishai.moviereservation.seat.seat_reservation.payment.entities.Payment;
 import com.idekishai.moviereservation.seat.seat_reservation.payment.services.PaymentService;
@@ -44,11 +45,11 @@ public class SeatReservationService {
                 .orElseThrow(() -> new ShowtimeNotFoundException(dto.showtimeId()));
 
         if (seat.getScreen().getScreenId() != showtime.getScreen().getScreenId())
-            throw new RuntimeException("Seat is not inside this screen");
+            throw new SeatNotInScreenException(seat.getSeatId(), showtime.getScreen().getScreenId());
 
-        boolean isUnavailable = seatReservationRepository.existsBySeat_SeatIdAndShowtime_ShowtimeIdAndLockedUntilAfter(dto.seatId(), dto.showtimeId(), LocalDateTime.now());
+        boolean isUnavailable = seatReservationRepository.existsBySeat_SeatIdAndShowtime_ShowtimeIdAndLockedUntilAfter(seat.getSeatId(), showtime.getShowtimeId(), LocalDateTime.now());
         if (isUnavailable)
-            throw new RuntimeException("Seat is locked or booked for this showtime");
+            throw new SeatAlreadyLockedException(seat.getSeatId(), showtime.getShowtimeId());
 
         String lockedBy = SecurityUtils.getCurrentUserEmail();
 
@@ -77,16 +78,16 @@ public class SeatReservationService {
 
     @Transactional
     public BookingConfirmationDTO bookSeat(BookingRequestDTO dto) {
-        SeatReservation seatReservation = seatReservationRepository.findById(dto.seatReservationId()).orElseThrow(() -> new RuntimeException("Seat Reservation Id doesn't exist"));
+        SeatReservation seatReservation = seatReservationRepository.findById(dto.seatReservationId()).orElseThrow(() -> new SeatReservationNotFound(dto.seatReservationId()));
 
         String currentUserEmail = SecurityUtils.getCurrentUserEmail();
 
         if (seatReservation.getStatus() != ReservationStatus.LOCKED)
-            throw new RuntimeException("Seat isn't locked");
+            throw new SeatNotLockedException(seatReservation.getSeatReservationId());
         if (seatReservation.getLockedUntil().isBefore(LocalDateTime.now()))
-            throw new RuntimeException("Seat reservation lock has expired");
+            throw new SeatReservationExpiredException(seatReservation.getSeatReservationId());
         if (!seatReservation.getLockedBy().equals(currentUserEmail))
-            throw new RuntimeException("Seat hasn't been locked by the same user");
+            throw new SeatNotOwnedException(seatReservation.getSeatReservationId());
 
         seatReservation.setStatus(ReservationStatus.BOOKED);
         seatReservation.setLockedUntil(null);
@@ -129,7 +130,7 @@ public class SeatReservationService {
 
     @Transactional
     public SeatReservationDTO cancelReservation(int seatReservationId) {
-        SeatReservation seatReservation = seatReservationRepository.findById(seatReservationId).orElseThrow(() -> new RuntimeException("Seat Reservation Id doesn't exist"));
+        SeatReservation seatReservation = seatReservationRepository.findById(seatReservationId).orElseThrow(() -> new SeatReservationNotFound(seatReservationId));
 
         seatReservation.setStatus(ReservationStatus.CANCELED);
 

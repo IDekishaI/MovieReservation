@@ -3,7 +3,9 @@ package com.idekishai.moviereservation.seat.seat_reservation.payment.services;
 import com.idekishai.moviereservation.common.SecurityUtils;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
+import com.idekishai.moviereservation.seat.seat_reservation.exceptions.SeatReservationNotFound;
 import com.idekishai.moviereservation.seat.seat_reservation.payment.entities.Payment;
+import com.idekishai.moviereservation.seat.seat_reservation.payment.exceptions.PaymentNotFoundException;
 import com.idekishai.moviereservation.seat.seat_reservation.payment.repositories.PaymentRepository;
 import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,7 @@ public class PaymentService {
     public Payment savePayment(BookingRequestDTO dto) {
         Payment payment = new Payment();
 
-        SeatReservation seatReservation = seatReservationRepository.findById(dto.seatReservationId()).orElseThrow(() -> new RuntimeException("Seat Reservation Id not found."));
+        SeatReservation seatReservation = seatReservationRepository.findById(dto.seatReservationId()).orElseThrow(() -> new SeatReservationNotFound(dto.seatReservationId()));
         payment.setSeatReservation(seatReservation);
         payment.setCardHolderName(dto.cardHolderName().trim());
 
@@ -41,7 +43,7 @@ public class PaymentService {
 
     public void deletePayment(int seatReservationId) {
         Payment payment = paymentRepository.findBySeatReservation_SeatReservationId(seatReservationId)
-                .orElseThrow(() -> new RuntimeException("Payment for reservation " + seatReservationId + " not found"));
+                .orElseThrow(() -> new PaymentNotFoundException(seatReservationId));
 
         paymentRepository.delete(payment);
 

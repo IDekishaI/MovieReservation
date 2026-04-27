@@ -8,6 +8,8 @@ import com.idekishai.moviereservation.screen.exceptions.ScreenSchedulingConflict
 import com.idekishai.moviereservation.seat.exceptions.SeatAlreadyExistsException;
 import com.idekishai.moviereservation.seat.exceptions.SeatInUseException;
 import com.idekishai.moviereservation.seat.exceptions.SeatNotFoundException;
+import com.idekishai.moviereservation.seat.seat_reservation.exceptions.*;
+import com.idekishai.moviereservation.seat.seat_reservation.payment.exceptions.PaymentNotFoundException;
 import com.idekishai.moviereservation.showtime.exceptions.ShowtimeInUseException;
 import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
 import com.idekishai.moviereservation.theatre.exceptions.TheatreInUseException;
@@ -142,7 +144,9 @@ public class GlobalExceptionHandler {
             TheatreNotFoundException.class,
             ScreenNotFoundException.class,
             ShowtimeNotFoundException.class,
-            SeatNotFoundException.class
+            SeatNotFoundException.class,
+            SeatReservationNotFound.class,
+            PaymentNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleNotFoundException(RuntimeException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
@@ -187,5 +191,30 @@ public class GlobalExceptionHandler {
         response.put("message", ex.getMessage());
         response.put("timestamp", LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler({
+            SeatNotLockedException.class,
+            SeatReservationExpiredException.class,
+            SeatAlreadyLockedException.class,
+            SeatNotOwnedException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleReservationStateException(RuntimeException ex) {
+        log.warn("Reservation state violation: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(SeatNotInScreenException.class)
+    public ResponseEntity<Map<String, Object>> handleSeatScreenMismatchException(RuntimeException ex) {
+        log.warn("Seat screen mismatch: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
