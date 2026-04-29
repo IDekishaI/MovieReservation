@@ -225,4 +225,14 @@ public class GlobalExceptionHandler {
         response.put("timestamp", LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(SeatLockLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleLockLimitException(RuntimeException ex) {
+        log.warn("Reservation violation: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
+    }
 }
