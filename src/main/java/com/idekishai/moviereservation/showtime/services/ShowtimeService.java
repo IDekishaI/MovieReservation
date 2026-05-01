@@ -91,7 +91,7 @@ public class ShowtimeService {
         showtime.setPrice(dto.price());
     }
 
-    private void overlapsShowtime(ShowtimeRequestDTO dto, int movieLength){
+    private void overlapsShowtime(ShowtimeRequestDTO dto, int movieLength) {
         LocalDate showtimeDate = DateUtils.parseStringToLocalDate(dto.showtimeDate());
         LocalTime showtimeTime = DateUtils.parseStringToLocalTime(dto.showtimeTime());
         Showtime previousShowtime = showtimeRepo
@@ -102,10 +102,10 @@ public class ShowtimeService {
 
         LocalDateTime showtimeDateTime = LocalDateTime.of(showtimeDate, showtimeTime);
 
-        if(previousShowtime != null) {
+        if (previousShowtime != null) {
             LocalDateTime previousShowtimeDateTime = LocalDateTime.of(previousShowtime.getShowtimeDate(), previousShowtime.getShowtimeTime());
 
-            if(previousShowtimeDateTime.plusMinutes(previousShowtime.getMovie().getMovieLength()).isAfter(showtimeDateTime))
+            if (previousShowtimeDateTime.plusMinutes(previousShowtime.getMovie().getMovieLength()).isAfter(showtimeDateTime))
                 throw new ScreenSchedulingConflictException(dto.screenId());
         }
 
@@ -114,10 +114,10 @@ public class ShowtimeService {
                 .stream()
                 .findFirst()
                 .orElse(null);
-        if(futureShowtime != null) {
+        if (futureShowtime != null) {
             LocalDateTime futureShowtimeDateTime = LocalDateTime.of(futureShowtime.getShowtimeDate(), futureShowtime.getShowtimeTime());
 
-            if(showtimeDateTime.plusMinutes(movieLength).isAfter(futureShowtimeDateTime))
+            if (showtimeDateTime.plusMinutes(movieLength).isAfter(futureShowtimeDateTime))
                 throw new ScreenSchedulingConflictException(dto.screenId());
         }
 

@@ -9,7 +9,7 @@ import java.util.Objects;
 
 @Component
 public class SeatReservationMapper {
-    public SeatReservationDTO toDto(SeatReservation seatReservation){
+    public SeatReservationDTO toDto(SeatReservation seatReservation) {
         return new SeatReservationDTO(seatReservation.getSeatReservationId(),
                 seatReservation.getSeat().getSeatRow(),
                 seatReservation.getSeat().getSeatColumn(),
@@ -18,7 +18,7 @@ public class SeatReservationMapper {
                 seatReservation.getLockedUntil());
     }
 
-    public List<SeatReservationDTO> toDtoList(List<SeatReservation> seatReservations){
+    public List<SeatReservationDTO> toDtoList(List<SeatReservation> seatReservations) {
         return seatReservations.stream()
                 .filter(Objects::nonNull)
                 .map(this::toDto)

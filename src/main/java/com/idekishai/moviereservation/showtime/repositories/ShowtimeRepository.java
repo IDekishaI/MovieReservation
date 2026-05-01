@@ -60,6 +60,7 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
             LocalTime time,
             Pageable pageable
     );
+
     @SuppressWarnings("JpaQlInspection")
     @Query("""
                 SELECT s FROM Showtime s

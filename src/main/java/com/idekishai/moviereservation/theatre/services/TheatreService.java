@@ -26,7 +26,7 @@ public class TheatreService {
 
     @Transactional
     public TheatreDTO saveTheatre(TheatreRequestDTO dto) {
-        if(theatreRepo.existsByTheatreNameAndTheatreCity(dto.theatreName().trim(), dto.theatreCity().trim()))
+        if (theatreRepo.existsByTheatreNameAndTheatreCity(dto.theatreName().trim(), dto.theatreCity().trim()))
             throw new TheatreAlreadyExistsException(dto.theatreName().trim(), dto.theatreCity().trim());
 
         Theatre theatre = new Theatre();
@@ -43,7 +43,7 @@ public class TheatreService {
         Theatre theatre = theatreRepo.findById(theatreId)
                 .orElseThrow(() -> new TheatreNotFoundException(theatreId));
 
-        if(theatreRepo.existsByTheatreNameAndTheatreCityAndTheatreIdNot(dto.theatreName().trim(), dto.theatreCity().trim(), theatreId))
+        if (theatreRepo.existsByTheatreNameAndTheatreCityAndTheatreIdNot(dto.theatreName().trim(), dto.theatreCity().trim(), theatreId))
             throw new TheatreAlreadyExistsException(dto.theatreName().trim(), dto.theatreCity().trim());
 
         theatre.setTheatreName(dto.theatreName().trim());
