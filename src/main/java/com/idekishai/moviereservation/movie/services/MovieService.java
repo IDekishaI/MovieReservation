@@ -10,9 +10,9 @@ import com.idekishai.moviereservation.movie.mappers.MovieMapper;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,13 +20,13 @@ public class MovieService {
     private final MovieRepository movieRepo;
     private final MovieMapper movieMapper;
 
-    public List<MovieDTO> getAllMovies() {
-        return movieMapper.toDtoList(movieRepo.findAll());
+    public Page<MovieDTO> getAllMovies(Pageable pageable) {
+        return movieRepo.findAll(pageable).map(movieMapper::toDto);
     }
 
     @Transactional
     public MovieDTO saveMovie(MovieRequestDTO dto) {
-        if(movieRepo.existsByMovieName(dto.movieName().trim()))
+        if (movieRepo.existsByMovieName(dto.movieName().trim()))
             throw new MovieAlreadyExistsException(dto.movieName().trim());
 
         Movie movie = new Movie();
@@ -43,7 +43,7 @@ public class MovieService {
         Movie movie = movieRepo.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException(movieId));
 
-        if(movieRepo.existsByMovieNameAndMovieIdNot(dto.movieName().trim(), movieId))
+        if (movieRepo.existsByMovieNameAndMovieIdNot(dto.movieName().trim(), movieId))
             throw new MovieAlreadyExistsException(dto.movieName().trim());
 
         movie.setMovieName(dto.movieName().trim());

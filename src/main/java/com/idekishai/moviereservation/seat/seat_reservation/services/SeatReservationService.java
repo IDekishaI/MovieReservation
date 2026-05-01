@@ -21,6 +21,8 @@ import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -41,7 +43,7 @@ public class SeatReservationService {
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
         Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new SeatNotFoundException(dto.seatId()));
 
-        if(seatReservationRepository.countByLockedByAndStatus(SecurityUtils.getCurrentUserEmail(), ReservationStatus.LOCKED) > 2)
+        if (seatReservationRepository.countByLockedByAndStatus(SecurityUtils.getCurrentUserEmail(), ReservationStatus.LOCKED) > 2)
             throw new SeatLockLimitExceededException(3);
 
         Showtime showtime = showtimeRepository.findById(dto.showtimeId())
@@ -127,8 +129,8 @@ public class SeatReservationService {
         return seatReservationMapper.toDtoList(seatReservationRepository.findByShowtime_ShowtimeId(showtimeId));
     }
 
-    public List<SeatReservationDTO> getAllReservationsForEmail(String email) {
-        return seatReservationMapper.toDtoList(seatReservationRepository.findByLockedBy(email));
+    public Page<SeatReservationDTO> getAllReservationsForEmail(String email, Pageable pageable) {
+        return seatReservationRepository.findByLockedBy(email, pageable).map(seatReservationMapper::toDto);
     }
 
     @Transactional

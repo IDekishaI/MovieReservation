@@ -6,6 +6,8 @@ import com.idekishai.moviereservation.seat.services.SeatService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,8 +25,11 @@ public class AdminSeatController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<SeatDTO>> getAllSeats() {
-        return ResponseEntity.ok(seatService.getAllSeats());
+    public ResponseEntity<Page<SeatDTO>> getAllSeats(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(seatService.getAllSeats(PageRequest.of(page, size)));
     }
 
     @GetMapping("/{screenId}")

@@ -13,9 +13,9 @@ import com.idekishai.moviereservation.theatre.exceptions.TheatreNotFoundExceptio
 import com.idekishai.moviereservation.theatre.repositories.TheatreRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,13 +24,13 @@ public class ScreenService {
     private final ScreenMapper screenMapper;
     private final TheatreRepository theatreRepository;
 
-    public List<ScreenDTO> getAllScreens() {
-        return screenMapper.toDtoList(screenRepository.findAll());
+    public Page<ScreenDTO> getAllScreens(Pageable pageable) {
+        return screenRepository.findAll(pageable).map(screenMapper::toDto);
     }
 
     @Transactional
-    public ScreenDTO saveScreen(ScreenRequestDTO dto){
-        if(screenRepository.existsByScreenNameAndTheatre_TheatreId(dto.screenName().trim(), dto.theatreId()))
+    public ScreenDTO saveScreen(ScreenRequestDTO dto) {
+        if (screenRepository.existsByScreenNameAndTheatre_TheatreId(dto.screenName().trim(), dto.theatreId()))
             throw new ScreenAlreadyExistsException(dto.screenName().trim(), dto.theatreId());
 
         Screen screen = new Screen();
@@ -42,11 +42,11 @@ public class ScreenService {
     }
 
     @Transactional
-    public ScreenDTO updateScreen(int screenId, ScreenRequestDTO dto){
+    public ScreenDTO updateScreen(int screenId, ScreenRequestDTO dto) {
         Screen screen = screenRepository.findById(screenId)
                 .orElseThrow(() -> new ScreenNotFoundException(screenId));
 
-        if(screenRepository.existsByScreenNameAndTheatre_TheatreIdAndScreenIdNot(dto.screenName().trim(), dto.theatreId(), screenId))
+        if (screenRepository.existsByScreenNameAndTheatre_TheatreIdAndScreenIdNot(dto.screenName().trim(), dto.theatreId(), screenId))
             throw new ScreenAlreadyExistsException(dto.screenName().trim(), dto.theatreId());
 
         mapDtoToScreen(screen, dto);
@@ -56,17 +56,17 @@ public class ScreenService {
     }
 
     @Transactional
-    public void deleteScreen(int screenId){
-        if(!screenRepository.existsById(screenId))
+    public void deleteScreen(int screenId) {
+        if (!screenRepository.existsById(screenId))
             throw new ScreenNotFoundException(screenId);
 
-        if(screenRepository.existsInShowtimes(screenId))
+        if (screenRepository.existsInShowtimes(screenId))
             throw new ScreenInUseException(screenId);
 
         screenRepository.deleteById(screenId);
     }
 
-    private void mapDtoToScreen(Screen screen, ScreenRequestDTO dto){
+    private void mapDtoToScreen(Screen screen, ScreenRequestDTO dto) {
         Theatre theatre = theatreRepository.findById(dto.theatreId())
                 .orElseThrow(() -> new TheatreNotFoundException(dto.theatreId()));
         screen.setTheatre(theatre);

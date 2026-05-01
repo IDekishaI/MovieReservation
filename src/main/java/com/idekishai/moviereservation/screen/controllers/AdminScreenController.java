@@ -6,13 +6,13 @@ import com.idekishai.moviereservation.screen.services.ScreenService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,25 +23,28 @@ public class AdminScreenController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ScreenDTO>> getAllScreens() {
-        return ResponseEntity.ok(screenService.getAllScreens());
+    public ResponseEntity<Page<ScreenDTO>> getAllScreens(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(screenService.getAllScreens(PageRequest.of(page, size)));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ScreenDTO> saveScreen(@RequestBody @Valid ScreenRequestDTO dto){
+    public ResponseEntity<ScreenDTO> saveScreen(@RequestBody @Valid ScreenRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(screenService.saveScreen(dto));
     }
 
     @PutMapping("/{screenId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ScreenDTO> updateScreen(@PathVariable @Positive int screenId, @RequestBody @Valid ScreenRequestDTO dto){
+    public ResponseEntity<ScreenDTO> updateScreen(@PathVariable @Positive int screenId, @RequestBody @Valid ScreenRequestDTO dto) {
         return ResponseEntity.ok(screenService.updateScreen(screenId, dto));
     }
 
     @DeleteMapping("/{screenId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> deleteScreen(@PathVariable @Positive int screenId){
+    public ResponseEntity<String> deleteScreen(@PathVariable @Positive int screenId) {
         screenService.deleteScreen(screenId);
         return ResponseEntity.ok("Screen deleted successfully");
     }

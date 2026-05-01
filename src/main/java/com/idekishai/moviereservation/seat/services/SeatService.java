@@ -20,6 +20,8 @@ import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -50,8 +52,8 @@ public class SeatService {
                 .toList();
     }
 
-    public List<SeatDTO> getAllSeats() {
-        return seatMapper.toDtoList(seatRepository.findAll());
+    public Page<SeatDTO> getAllSeats(Pageable pageable) {
+        return seatRepository.findAll(pageable).map(seatMapper::toDto);
     }
 
     @Transactional

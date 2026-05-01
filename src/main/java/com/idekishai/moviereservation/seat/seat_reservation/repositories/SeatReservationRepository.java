@@ -2,6 +2,8 @@ package com.idekishai.moviereservation.seat.seat_reservation.repositories;
 
 import com.idekishai.moviereservation.seat.enums.ReservationStatus;
 import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -32,7 +34,7 @@ public interface SeatReservationRepository extends JpaRepository<SeatReservation
 
     List<SeatReservation> findByShowtime_ShowtimeId(int showtimeId);
 
-    List<SeatReservation> findByLockedBy(String email);
+    Page<SeatReservation> findByLockedBy(String email, Pageable pageable);
 
     int countByLockedByAndStatus(String lockedBy, ReservationStatus status);
 }

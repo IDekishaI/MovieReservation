@@ -8,12 +8,12 @@ import com.idekishai.moviereservation.seat.seat_reservation.dtos.SeatReservation
 import com.idekishai.moviereservation.seat.seat_reservation.services.SeatReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -23,9 +23,12 @@ public class SeatReservationController {
     private final SeatReservationService seatReservationService;
 
     @GetMapping("/me")
-    public ResponseEntity<List<SeatReservationDTO>> getMyReservations() {
+    public ResponseEntity<Page<SeatReservationDTO>> getMyReservations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
         String email = SecurityUtils.getCurrentUserEmail();
-        return ResponseEntity.ok(seatReservationService.getAllReservationsForEmail(email));
+        return ResponseEntity.ok(seatReservationService.getAllReservationsForEmail(email, PageRequest.of(page, size)));
     }
 
     @PostMapping("/lock")
