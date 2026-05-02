@@ -40,6 +40,7 @@ public class SeatReservationService {
     private final PaymentService paymentService;
     private final SeatReservationMapper seatReservationMapper;
 
+    @Transactional
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
         Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new SeatNotFoundException(dto.seatId()));
 
@@ -52,7 +53,8 @@ public class SeatReservationService {
         if (seat.getScreen().getScreenId() != showtime.getScreen().getScreenId())
             throw new SeatNotInScreenException(seat.getSeatId(), showtime.getScreen().getScreenId());
 
-        boolean isUnavailable = seatReservationRepository.existsBySeat_SeatIdAndShowtime_ShowtimeIdAndLockedUntilAfter(seat.getSeatId(), showtime.getShowtimeId(), LocalDateTime.now());
+        boolean isUnavailable = seatReservationRepository.isSeatUnavailableForShowtime(seat.getSeatId(), showtime.getShowtimeId(), LocalDateTime.now());
+
         if (isUnavailable)
             throw new SeatAlreadyLockedException(seat.getSeatId(), showtime.getShowtimeId());
 
@@ -136,6 +138,9 @@ public class SeatReservationService {
     @Transactional
     public SeatReservationDTO cancelReservation(int seatReservationId) {
         SeatReservation seatReservation = seatReservationRepository.findById(seatReservationId).orElseThrow(() -> new SeatReservationNotFound(seatReservationId));
+
+        if(seatReservation.getStatus() != ReservationStatus.BOOKED)
+            throw new ReservationNotBookedException(seatReservation.getSeatReservationId());
 
         seatReservation.setStatus(ReservationStatus.CANCELED);
 

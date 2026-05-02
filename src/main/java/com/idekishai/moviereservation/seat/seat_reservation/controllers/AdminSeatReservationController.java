@@ -39,6 +39,7 @@ public class AdminSeatReservationController {
     }
 
     @PatchMapping("/{seatReservationId}/cancel")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SeatReservationDTO> cancelReservation(@PathVariable @Positive int seatReservationId) {
         return ResponseEntity.ok(seatReservationService.cancelReservation(seatReservationId));
     }

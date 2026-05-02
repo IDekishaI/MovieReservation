@@ -22,7 +22,14 @@ public interface SeatReservationRepository extends JpaRepository<SeatReservation
             """)
     List<Integer> findUnavailableSeatIds(@Param("showtimeId") int showtimeId, @Param("now") LocalDateTime now);
 
-    boolean existsBySeat_SeatIdAndShowtime_ShowtimeIdAndLockedUntilAfter(int seatId, int showtimeId, LocalDateTime now);
+    @Query("""
+            SELECT COUNT(sr) > 0
+            FROM SeatReservation sr
+            WHERE sr.seat.seatId = :seatId
+            AND sr.showtime.showtimeId = :showtimeId
+            AND (sr.status = 'BOOKED' OR (sr.status = 'LOCKED' AND sr.lockedUntil > :now))
+            """)
+    boolean isSeatUnavailableForShowtime(int seatId, int showtimeId, LocalDateTime now);
 
     @Modifying
     @Query("""
