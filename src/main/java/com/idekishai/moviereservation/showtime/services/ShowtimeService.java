@@ -17,6 +17,9 @@ import com.idekishai.moviereservation.showtime.mappers.ShowtimeMapper;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -33,15 +36,21 @@ public class ShowtimeService {
     private final ScreenRepository screenRepository;
     private final ShowtimeMapper showtimeMapper;
 
+    @Cacheable(value = "showtimes-by-theatre", key = "#theatreId")
     public List<ShowtimeDisplayDTO> findByTheatreId(int theatreId) {
         return showtimeMapper.toShowtimeDisplayDTOList(showtimeRepo.findAllByTheatreId(theatreId));
     }
 
+    @Cacheable(value = "showtimes-by-movie", key = "#movieId")
     public List<ShowtimeDisplayDTO> findByMovieId(int movieId) {
         return showtimeMapper.toShowtimeDisplayDTOList(showtimeRepo.findByMovie_MovieId(movieId));
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "showtimes-by-theatre", allEntries = true),
+            @CacheEvict(value = "showtimes-by-movie", allEntries = true)
+    })
     public ShowtimeDisplayDTO saveShowtime(ShowtimeRequestDTO dto) {
         Showtime showtime = new Showtime();
 
@@ -54,6 +63,10 @@ public class ShowtimeService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "showtimes-by-theatre", allEntries = true),
+            @CacheEvict(value = "showtimes-by-movie", allEntries = true)
+    })
     public ShowtimeDisplayDTO updateShowtime(int showtimeId, ShowtimeRequestDTO dto) {
         Showtime showtime = showtimeRepo.findById(showtimeId)
                 .orElseThrow(() -> new ShowtimeNotFoundException(showtimeId));
@@ -67,6 +80,10 @@ public class ShowtimeService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "showtimes-by-theatre", allEntries = true),
+            @CacheEvict(value = "showtimes-by-movie", allEntries = true)
+    })
     public void deleteShowtime(int showtimeId) {
         if (!showtimeRepo.existsById(showtimeId))
             throw new ShowtimeNotFoundException(showtimeId);

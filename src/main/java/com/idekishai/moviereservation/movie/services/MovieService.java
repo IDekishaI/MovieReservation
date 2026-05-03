@@ -10,6 +10,8 @@ import com.idekishai.moviereservation.movie.mappers.MovieMapper;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,11 +22,13 @@ public class MovieService {
     private final MovieRepository movieRepo;
     private final MovieMapper movieMapper;
 
+    @Cacheable(value = "movies", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<MovieDTO> getAllMovies(Pageable pageable) {
         return movieRepo.findAll(pageable).map(movieMapper::toDto);
     }
 
     @Transactional
+    @CacheEvict(value = "movies", allEntries = true)
     public MovieDTO saveMovie(MovieRequestDTO dto) {
         if (movieRepo.existsByMovieName(dto.movieName().trim()))
             throw new MovieAlreadyExistsException(dto.movieName().trim());
@@ -39,6 +43,7 @@ public class MovieService {
     }
 
     @Transactional
+    @CacheEvict(value = "movies", allEntries = true)
     public MovieDTO updateMovie(int movieId, MovieRequestDTO dto) {
         Movie movie = movieRepo.findById(movieId)
                 .orElseThrow(() -> new MovieNotFoundException(movieId));
@@ -55,6 +60,7 @@ public class MovieService {
     }
 
     @Transactional
+    @CacheEvict(value = "movies", allEntries = true)
     public void deleteMovie(int movieId) {
         if (!movieRepo.existsById(movieId))
             throw new MovieNotFoundException(movieId);

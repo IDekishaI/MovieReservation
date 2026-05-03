@@ -10,6 +10,8 @@ import com.idekishai.moviereservation.theatre.mappers.TheatreMapper;
 import com.idekishai.moviereservation.theatre.repositories.TheatreRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,11 +22,13 @@ public class TheatreService {
     private final TheatreRepository theatreRepo;
     private final TheatreMapper theatreMapper;
 
+    @Cacheable(value = "theatres", key = "'all'")
     public List<TheatreDTO> getAllTheatres() {
         return theatreMapper.toDtoList(theatreRepo.findAll());
     }
 
     @Transactional
+    @CacheEvict(value = "theatres", key = "'all'")
     public TheatreDTO saveTheatre(TheatreRequestDTO dto) {
         if (theatreRepo.existsByTheatreNameAndTheatreCity(dto.theatreName().trim(), dto.theatreCity().trim()))
             throw new TheatreAlreadyExistsException(dto.theatreName().trim(), dto.theatreCity().trim());
@@ -39,6 +43,7 @@ public class TheatreService {
     }
 
     @Transactional
+    @CacheEvict(value = "theatres", key = "'all'")
     public TheatreDTO updateTheatre(int theatreId, TheatreRequestDTO dto) {
         Theatre theatre = theatreRepo.findById(theatreId)
                 .orElseThrow(() -> new TheatreNotFoundException(theatreId));
@@ -55,6 +60,7 @@ public class TheatreService {
     }
 
     @Transactional
+    @CacheEvict(value = "theatres", key = "'all'")
     public void deleteTheatre(int theatreId) {
         if (!theatreRepo.existsById(theatreId))
             throw new TheatreNotFoundException(theatreId);

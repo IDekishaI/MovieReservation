@@ -1,5 +1,6 @@
 package com.idekishai.moviereservation.showtime.dtos;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -15,5 +16,5 @@ public record ShowtimeDisplayDTO(
         LocalDate showtimeDate,
         LocalTime showtimeTime,
         Float price
-) {
+) implements Serializable{
 }
