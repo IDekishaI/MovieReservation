@@ -3,6 +3,7 @@ package com.idekishai.moviereservation.handlers;
 import com.idekishai.moviereservation.movie.exceptions.MovieAlreadyExistsException;
 import com.idekishai.moviereservation.movie.exceptions.MovieInUseException;
 import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
+import com.idekishai.moviereservation.ratelimiter.exceptions.RateLimitExceededException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenAlreadyExistsException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenInUseException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
@@ -229,6 +230,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SeatLockLimitExceededException.class)
     public ResponseEntity<Map<String, Object>> handleLockLimitException(RuntimeException ex) {
         log.warn("Reservation violation: {}", ex.getMessage());
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", ex.getMessage());
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceededException(RuntimeException ex) {
+        log.warn("Rate Limit Exceeded: {}", ex.getMessage());
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", ex.getMessage());

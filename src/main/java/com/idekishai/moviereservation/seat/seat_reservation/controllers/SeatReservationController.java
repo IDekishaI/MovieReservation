@@ -1,6 +1,7 @@
 package com.idekishai.moviereservation.seat.seat_reservation.controllers;
 
 import com.idekishai.moviereservation.common.SecurityUtils;
+import com.idekishai.moviereservation.ratelimiter.annotations.RateLimit;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingConfirmationDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
@@ -23,6 +24,7 @@ public class SeatReservationController {
     private final SeatReservationService seatReservationService;
 
     @GetMapping("/me")
+    @RateLimit(maxRequests = 30)
     public ResponseEntity<Page<SeatReservationDTO>> getMyReservations(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
@@ -32,6 +34,7 @@ public class SeatReservationController {
     }
 
     @PostMapping("/lock")
+    @RateLimit
     public ResponseEntity<SeatReservationDTO> lockSeat(@RequestBody @Valid ReservationRequestDTO reservationRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(seatReservationService.lockSeat(reservationRequestDTO));
     }

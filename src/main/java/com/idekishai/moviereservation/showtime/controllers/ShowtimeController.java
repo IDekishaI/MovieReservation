@@ -1,5 +1,6 @@
 package com.idekishai.moviereservation.showtime.controllers;
 
+import com.idekishai.moviereservation.ratelimiter.annotations.RateLimit;
 import com.idekishai.moviereservation.seat.dtos.SeatAvailabilityDTO;
 import com.idekishai.moviereservation.seat.services.SeatService;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeDisplayDTO;
@@ -34,6 +35,7 @@ public class ShowtimeController {
     }
 
     @GetMapping("/{showtimeId}")
+    @RateLimit(maxRequests = 30)
     public ResponseEntity<List<SeatAvailabilityDTO>> getAvailableSeatsForShowtime(@PathVariable @Positive int showtimeId) {
         return ResponseEntity.ok(seatService.getAvailableSeats(showtimeId));
     }
