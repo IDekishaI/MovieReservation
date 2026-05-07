@@ -1,6 +1,8 @@
 package com.idekishai.moviereservation.showtime.services;
 
 import com.idekishai.moviereservation.common.DateUtils;
+import com.idekishai.moviereservation.email.dtos.CancellationEmailInfoDTO;
+import com.idekishai.moviereservation.email.services.EmailService;
 import com.idekishai.moviereservation.movie.entities.Movie;
 import com.idekishai.moviereservation.movie.exceptions.MovieNotFoundException;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
@@ -8,15 +10,19 @@ import com.idekishai.moviereservation.screen.entities.Screen;
 import com.idekishai.moviereservation.screen.exceptions.ScreenNotFoundException;
 import com.idekishai.moviereservation.screen.exceptions.ScreenSchedulingConflictException;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
+import com.idekishai.moviereservation.seat.enums.ReservationStatus;
+import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
+import com.idekishai.moviereservation.seat.seat_reservation.payment.services.PaymentService;
+import com.idekishai.moviereservation.seat.seat_reservation.repositories.SeatReservationRepository;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeDisplayDTO;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.showtime.entities.Showtime;
-import com.idekishai.moviereservation.showtime.exceptions.ShowtimeInUseException;
 import com.idekishai.moviereservation.showtime.exceptions.ShowtimeNotFoundException;
 import com.idekishai.moviereservation.showtime.mappers.ShowtimeMapper;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -26,15 +32,20 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ShowtimeService {
     private final ShowtimeRepository showtimeRepo;
     private final MovieRepository movieRepository;
     private final ScreenRepository screenRepository;
     private final ShowtimeMapper showtimeMapper;
+    private final SeatReservationRepository seatReservationRepository;
+    private final EmailService emailService;
+    private final PaymentService paymentService;
 
     @Cacheable(value = "showtimes-by-theatre", key = "#theatreId")
     public List<ShowtimeDisplayDTO> findByTheatreId(int theatreId) {
@@ -85,13 +96,39 @@ public class ShowtimeService {
             @CacheEvict(value = "showtimes-by-movie", allEntries = true)
     })
     public void deleteShowtime(int showtimeId) {
-        if (!showtimeRepo.existsById(showtimeId))
-            throw new ShowtimeNotFoundException(showtimeId);
+        Showtime showtime = showtimeRepo.findById(showtimeId)
+                .orElseThrow(() -> new ShowtimeNotFoundException(showtimeId));
 
-        if (showtimeRepo.existsInSeat_Reservations(showtimeId))
-            throw new ShowtimeInUseException(showtimeId);
+        List<SeatReservation> reservations = seatReservationRepository.findByShowtime_ShowtimeId(showtimeId);
+
+        List<CancellationEmailInfoDTO> emailsToNotify = new ArrayList<>();
+
+        for (SeatReservation reservation : reservations) {
+            if(reservation.getStatus() == ReservationStatus.BOOKED) {
+                paymentService.deletePayment(reservation.getSeatReservationId());
+
+                emailsToNotify.add(new CancellationEmailInfoDTO(
+                        reservation.getLockedBy(),
+                        showtime.getMovie().getMovieName(),
+                        showtime.getTheatre().getTheatreName(),
+                        showtime.getTheatre().getTheatreCity(),
+                        showtime.getScreen().getScreenName(),
+                        reservation.getSeat().getSeatRow(),
+                        reservation.getSeat().getSeatColumn(),
+                        showtime.getShowtimeDate(),
+                        showtime.getShowtimeTime()
+                ));
+            }
+        }
+
+        seatReservationRepository.deleteAll(reservations);
 
         showtimeRepo.deleteById(showtimeId);
+
+        for(CancellationEmailInfoDTO info : emailsToNotify)
+            emailService.sendShowtimeCancellationEmail(info);
+
+        log.info("Showtime {} deleted, {} reservations cancelled", showtimeId, reservations.size());
     }
 
     private void mapDtoToShowtime(Showtime showtime, ShowtimeRequestDTO dto) {

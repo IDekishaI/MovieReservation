@@ -1,6 +1,5 @@
 package com.idekishai.moviereservation.seat.seat_reservation.payment.services;
 
-import com.idekishai.moviereservation.common.SecurityUtils;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.entities.SeatReservation;
 import com.idekishai.moviereservation.seat.seat_reservation.exceptions.SeatReservationNotFound;
@@ -47,6 +46,6 @@ public class PaymentService {
 
         paymentRepository.delete(payment);
 
-        log.info("Payment deleted for reservation {} by {}", seatReservationId, SecurityUtils.getCurrentUserEmail());
+        log.info("Payment deleted for reservation {}", seatReservationId);
     }
 }

@@ -1,6 +1,9 @@
 package com.idekishai.moviereservation.seat.seat_reservation.services;
 
 import com.idekishai.moviereservation.common.SecurityUtils;
+import com.idekishai.moviereservation.email.dtos.BookingConfirmationEmailInfoDTO;
+import com.idekishai.moviereservation.email.dtos.CancellationEmailInfoDTO;
+import com.idekishai.moviereservation.email.services.EmailService;
 import com.idekishai.moviereservation.seat.entities.Seat;
 import com.idekishai.moviereservation.seat.enums.ReservationStatus;
 import com.idekishai.moviereservation.seat.exceptions.SeatNotFoundException;
@@ -39,6 +42,7 @@ public class SeatReservationService {
     private final ShowtimeRepository showtimeRepository;
     private final PaymentService paymentService;
     private final SeatReservationMapper seatReservationMapper;
+    private final EmailService emailService;
 
     @Transactional
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
@@ -115,6 +119,22 @@ public class SeatReservationService {
 
         Payment payment = paymentService.savePayment(dto);
 
+        Showtime showtime = seatReservation.getShowtime();
+        emailService.sendBookingConfirmationEmail(new BookingConfirmationEmailInfoDTO(
+                currentUserEmail,
+                movieName,
+                showtime.getTheatre().getTheatreName(),
+                showtime.getTheatre().getTheatreCity(),
+                showtime.getScreen().getScreenName(),
+                seatRow,
+                seatColumn,
+                movieDate,
+                movieTime,
+                cardHolderName,
+                lastFourDigits,
+                payment.getPaidAt()
+        ));
+
         return new BookingConfirmationDTO(seatReservationId,
                 seatRow,
                 seatColumn,
@@ -149,6 +169,19 @@ public class SeatReservationService {
         SeatReservation saved = seatReservationRepository.save(seatReservation);
 
         log.info("Seat reservation {} has been successfully canceled", seatReservationId);
+
+        Showtime showtime = seatReservation.getShowtime();
+        emailService.sendBookingCancellationEmail(new CancellationEmailInfoDTO(
+                seatReservation.getLockedBy(),
+                showtime.getMovie().getMovieName(),
+                showtime.getTheatre().getTheatreName(),
+                showtime.getTheatre().getTheatreCity(),
+                showtime.getScreen().getScreenName(),
+                seatReservation.getSeat().getSeatRow(),
+                seatReservation.getSeat().getSeatColumn(),
+                showtime.getShowtimeDate(),
+                showtime.getShowtimeTime()
+        ));
 
         return seatReservationMapper.toDto(saved);
     }
