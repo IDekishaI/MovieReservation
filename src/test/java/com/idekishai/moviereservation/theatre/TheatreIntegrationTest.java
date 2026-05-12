@@ -50,7 +50,7 @@ public class TheatreIntegrationTest {
     void saveTheatre_shouldReturn201_whenValidRequest() throws Exception {
         TheatreRequestDTO dto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
@@ -64,13 +64,13 @@ public class TheatreIntegrationTest {
     void saveTheatre_shouldReturn409_whenDuplicateNameAndCity() throws Exception {
         TheatreRequestDTO dto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
@@ -82,7 +82,7 @@ public class TheatreIntegrationTest {
     void saveTheatre_shouldReturn400_whenBlankName() throws Exception {
         TheatreRequestDTO dto = new TheatreRequestDTO("", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
@@ -94,7 +94,7 @@ public class TheatreIntegrationTest {
     void saveTheatre_shouldReturn403_whenNotAdmin() throws Exception {
         TheatreRequestDTO dto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
@@ -105,7 +105,7 @@ public class TheatreIntegrationTest {
     void saveTheatre_shouldReturn401_whenNotAuthenticated() throws Exception {
         TheatreRequestDTO dto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
@@ -115,7 +115,7 @@ public class TheatreIntegrationTest {
     void updateTheatre_shouldReturn200_whenValidRequest() throws Exception {
         TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String response = mockMvc.perform(post("/theatre")
+        String response = mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
@@ -126,7 +126,7 @@ public class TheatreIntegrationTest {
 
         TheatreRequestDTO updateDto = new TheatreRequestDTO("CineStar", "Nikole Tesle 2", "Novi Sad");
 
-        mockMvc.perform(put("/theatre/" + theatreId)
+        mockMvc.perform(put("/theatres/" + theatreId)
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
@@ -139,7 +139,7 @@ public class TheatreIntegrationTest {
     void updateTheatre_shouldReturn404_whenNotFound() throws Exception {
         TheatreRequestDTO dto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(put("/theatre/999")
+        mockMvc.perform(put("/theatres/999")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
@@ -151,7 +151,7 @@ public class TheatreIntegrationTest {
     void deleteTheatre_shouldReturn200_whenExists() throws Exception {
         TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String response = mockMvc.perform(post("/theatre")
+        String response = mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
@@ -160,7 +160,7 @@ public class TheatreIntegrationTest {
 
         int theatreId = objectMapper.readTree(response).get("theatreId").asInt();
 
-        mockMvc.perform(delete("/theatre/" + theatreId)
+        mockMvc.perform(delete("/theatres/" + theatreId)
                         .with(user("test@test.com").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Theatre deleted successfully"));
@@ -168,7 +168,7 @@ public class TheatreIntegrationTest {
 
     @Test
     void deleteTheatre_shouldReturn404_whenNotFound() throws Exception {
-        mockMvc.perform(delete("/theatre/999")
+        mockMvc.perform(delete("/theatres/999")
                         .with(user("test@test.com").roles("ADMIN")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Theatre with id 999 not found"));
@@ -179,13 +179,13 @@ public class TheatreIntegrationTest {
         TheatreRequestDTO dto1 = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
         TheatreRequestDTO dto2 = new TheatreRequestDTO("CineStar", "Nikole Tesle 2", "Novi Sad");
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto1)))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto2)))
@@ -201,7 +201,7 @@ public class TheatreIntegrationTest {
     void deleteTheatre_shouldReturn409_whenTheatreHasScreens() throws Exception {
         TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String response = mockMvc.perform(post("/theatre")
+        String response = mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
@@ -218,7 +218,7 @@ public class TheatreIntegrationTest {
                         .content(objectMapper.writeValueAsString(screenDto)))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(delete("/theatre/" + theatreId)
+        mockMvc.perform(delete("/theatres/" + theatreId)
                         .with(user("test@test.com").roles("ADMIN")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Theatre with id " + theatreId + " has existing screens and cannot be deleted"));
@@ -228,7 +228,7 @@ public class TheatreIntegrationTest {
     void updateTheatre_shouldReturn200_whenKeepingSameNameAndCity() throws Exception {
         TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String response = mockMvc.perform(post("/theatre")
+        String response = mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
@@ -239,7 +239,7 @@ public class TheatreIntegrationTest {
 
         TheatreRequestDTO updateDto = new TheatreRequestDTO("Cineplexx", "Vojvode Misica 5", "Nis");
 
-        mockMvc.perform(put("/theatre/" + theatreId)
+        mockMvc.perform(put("/theatres/" + theatreId)
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
@@ -253,7 +253,7 @@ public class TheatreIntegrationTest {
     void updateTheatre_shouldReturn409_whenDuplicateNameAndCity() throws Exception {
         TheatreRequestDTO firstDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatre")
+        mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(firstDto)))
@@ -261,7 +261,7 @@ public class TheatreIntegrationTest {
 
         TheatreRequestDTO secondDto = new TheatreRequestDTO("CineStar", "Nikole Tesle 2", "Novi Sad");
 
-        String response = mockMvc.perform(post("/theatre")
+        String response = mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(secondDto)))
@@ -272,7 +272,7 @@ public class TheatreIntegrationTest {
 
         TheatreRequestDTO updateDto = new TheatreRequestDTO("Cineplexx", "Knjazevacka 3", "Nis");
 
-        mockMvc.perform(put("/theatre/" + secondTheatreId)
+        mockMvc.perform(put("/theatres/" + secondTheatreId)
                         .with(user("test@test.com").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))

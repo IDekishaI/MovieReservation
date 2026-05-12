@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @Validated
-@RequestMapping("/theatre")
+@RequestMapping("/theatres")
 public class AdminTheatreController {
     private final TheatreService theatreService;
 
