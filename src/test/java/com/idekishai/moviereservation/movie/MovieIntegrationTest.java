@@ -2,12 +2,10 @@ package com.idekishai.moviereservation.movie;
 
 import com.idekishai.moviereservation.movie.dtos.MovieRequestDTO;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
-import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
-import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
-import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import com.idekishai.moviereservation.theatre.repositories.TheatreRepository;
+import com.idekishai.moviereservation.utils.TestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,14 +67,10 @@ public class MovieIntegrationTest {
     }
 
     @Test
-    void saveMovie_shouldReturn209_whenDuplicateName() throws Exception {
-        MovieRequestDTO dto1 = new MovieRequestDTO("Avatar", (short) 94, "Action");
+    void saveMovie_shouldReturn409_whenDuplicateName() throws Exception {
+        TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
 
-        mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto1)))
-                .andExpect(status().isCreated());
+        MovieRequestDTO dto1 = new MovieRequestDTO("Avatar", (short) 94, "Action");
 
         mockMvc.perform(post("/movies")
                         .with(user("test@test.com").roles("ADMIN"))
@@ -97,22 +91,20 @@ public class MovieIntegrationTest {
     }
 
     @Test
-    void getAllMovies_shouldReturn200_withPageOfMovies() throws Exception {
+    void saveMovie_shouldReturn403_whenNotAdmin() throws Exception {
         MovieRequestDTO dto1 = new MovieRequestDTO("Avatar", (short) 94, "Action");
-        MovieRequestDTO dto2 = new MovieRequestDTO("Conjuring", (short) 120, "Horror");
 
         mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
+                        .with(user("test@test.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto1)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isForbidden());
+    }
 
-        mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto2)))
-                .andExpect(status().isCreated());
-
+    @Test
+    void getAllMovies_shouldReturn200_withPageOfMovies() throws Exception {
+        TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
+        TestHelper.createMovie(mockMvc, objectMapper, "Conjuring", (short) 120, "Horror");
 
         mockMvc.perform(get("/movies")
                         .with(user("test@test.com").roles("USER"))
@@ -128,16 +120,7 @@ public class MovieIntegrationTest {
 
     @Test
     void updateMovie_shouldReturn200_whenValidRequest() throws Exception {
-        MovieRequestDTO dto1 = new MovieRequestDTO("Avatar", (short) 94, "Action");
-
-        String response = mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto1)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int movieId = objectMapper.readTree(response).get("movieId").asInt();
+        int movieId = TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
 
         MovieRequestDTO dto2 = new MovieRequestDTO("Conjuring", (short) 120, "Horror");
 
@@ -165,16 +148,7 @@ public class MovieIntegrationTest {
 
     @Test
     void updateMovie_shouldReturn200_whenKeepingSameName() throws Exception {
-        MovieRequestDTO dto1 = new MovieRequestDTO("Avatar", (short) 94, "Action");
-
-        String response = mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto1)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int movieId = objectMapper.readTree(response).get("movieId").asInt();
+        int movieId = TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
 
         MovieRequestDTO dto2 = new MovieRequestDTO("Avatar", (short) 100, "Fiction");
 
@@ -190,24 +164,9 @@ public class MovieIntegrationTest {
 
     @Test
     void updateMovie_shouldReturn409_whenDuplicateName() throws Exception {
-        MovieRequestDTO dto1 = new MovieRequestDTO("Avatar", (short) 94, "Action");
+        TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
 
-        mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto1)))
-                .andExpect(status().isCreated());
-
-        MovieRequestDTO dto2 = new MovieRequestDTO("Conjuring", (short) 120, "Horror");
-
-        String response = mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto2)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int movie2Id = objectMapper.readTree(response).get("movieId").asInt();
+        int movie2Id = TestHelper.createMovie(mockMvc, objectMapper, "Conjuring", (short) 120, "Horror");
 
         MovieRequestDTO updateDto = new MovieRequestDTO("Avatar", (short) 120, "Horror");
 
@@ -221,16 +180,7 @@ public class MovieIntegrationTest {
 
     @Test
     void deleteMovie_shouldReturn200_whenExists() throws Exception {
-        MovieRequestDTO dto = new MovieRequestDTO("Avatar", (short) 94, "Action");
-
-        String response = mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int movieId = objectMapper.readTree(response).get("movieId").asInt();
+        int movieId = TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
 
         mockMvc.perform(delete("/movies/" + movieId)
                         .with(user("test@test.com").roles("ADMIN")))
@@ -247,50 +197,17 @@ public class MovieIntegrationTest {
     }
 
     @Test
-    void deleteMovie_shouldReturn409_whenMovieHasShowtimes() throws Exception{
-        MovieRequestDTO movieRequestDTO = new MovieRequestDTO("Avatar", (short) 94, "Action");
+    void deleteMovie_shouldReturn409_whenMovieHasShowtimes() throws Exception {
+        int movieId = TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
 
-        String movieResponse = mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(movieRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        int movieId = objectMapper.readTree(movieResponse).get("movieId").asInt();
+        int screenId = TestHelper.createScreen(mockMvc, objectMapper, theatreId, "IMAX 3D", (short) 100);
 
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
-
-        ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "IMAX 3D", (short)100);
-
-        String screenResponse = mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int screenId = objectMapper.readTree(screenResponse).get("screenId").asInt();
-
-        ShowtimeRequestDTO showtimeRequestDTO = new ShowtimeRequestDTO(movieId, screenId, "2026-06-25", "11:00:00", 5F);
-
-        mockMvc.perform(post("/showtimes")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(showtimeRequestDTO)))
-                .andExpect(status().isCreated());
+        TestHelper.createShowtime(mockMvc, objectMapper, movieId, screenId, "2026-05-25", "11:00:00", 5F);
 
         mockMvc.perform(delete("/movies/" + movieId)
-                .with(user("test@test.com").roles("ADMIN")))
+                        .with(user("test@test.com").roles("ADMIN")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Movie with id " + movieId + " is being used in existing showtimes and cannot be deleted"));
     }

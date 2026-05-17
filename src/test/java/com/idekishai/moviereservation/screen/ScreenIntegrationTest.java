@@ -1,13 +1,11 @@
 package com.idekishai.moviereservation.screen;
 
-import com.idekishai.moviereservation.movie.dtos.MovieRequestDTO;
 import com.idekishai.moviereservation.movie.repositories.MovieRepository;
 import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
-import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.showtime.repositories.ShowtimeRepository;
-import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import com.idekishai.moviereservation.theatre.repositories.TheatreRepository;
+import com.idekishai.moviereservation.utils.TestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,16 +52,7 @@ public class ScreenIntegrationTest {
 
     @Test
     void saveScreen_shouldReturn201_whenValidRequest() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
         ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
 
@@ -78,25 +67,12 @@ public class ScreenIntegrationTest {
     }
 
     @Test
-    void saveScreen_shouldReturn209_whenDuplicateNameAndTheatreId() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+    void saveScreen_shouldReturn409_whenDuplicateNameAndTheatreId() throws Exception{
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
+        TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 85);
 
         ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
-
-        mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO)))
-                .andExpect(status().isCreated());
 
         mockMvc.perform(post("/screens")
                         .with(user("test@test.com").roles("ADMIN"))
@@ -108,16 +84,7 @@ public class ScreenIntegrationTest {
 
     @Test
     void saveScreen_shouldReturn401_whenNotAuthenticated() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
         ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
 
@@ -125,6 +92,19 @@ public class ScreenIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(screenRequestDTO)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void saveScreen_shouldReturn403_whenNotAdmin() throws Exception{
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
+
+        ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
+
+        mockMvc.perform(post("/screens")
+                        .with(user("test@test.com").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(screenRequestDTO)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -141,32 +121,11 @@ public class ScreenIntegrationTest {
 
     @Test
     void getAllScreens_shouldReturn200_withPageOfScreens() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 85);
 
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
-
-        ScreenRequestDTO screenRequestDTO1 = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
-
-        mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO1)))
-                .andExpect(status().isCreated());
-
-        ScreenRequestDTO screenRequestDTO2 = new ScreenRequestDTO(theatreId, "IMAX 3D", (short)50);
-
-        mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO2)))
-                .andExpect(status().isCreated());
+        TestHelper.createScreen(mockMvc, objectMapper, theatreId, "IMAX 3D", (short) 50);
 
         mockMvc.perform(get("/screens")
                         .with(user("test@test.com").roles("ADMIN"))
@@ -182,27 +141,9 @@ public class ScreenIntegrationTest {
 
     @Test
     void updateScreen_shouldReturn200_whenValidRequest() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
-
-        ScreenRequestDTO screenRequestDTO1 = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
-
-        String screenResponse = mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO1)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int screenId = objectMapper.readTree(screenResponse).get("screenId").asInt();
+        int screenId = TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 85);
 
         ScreenRequestDTO screenRequestDTO2 = new ScreenRequestDTO(theatreId, "IMAX 3D", (short)50);
 
@@ -218,16 +159,7 @@ public class ScreenIntegrationTest {
 
     @Test
     void updateScreen_shouldReturn404_whenScreenNotFound() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
         ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
 
@@ -241,27 +173,9 @@ public class ScreenIntegrationTest {
 
     @Test
     void updateScreen_shouldReturn200_whenKeepingSameNameAndTheatreId() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
-
-        ScreenRequestDTO screenRequestDTO1 = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
-
-        String screenResponse = mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO1)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int screenId = objectMapper.readTree(screenResponse).get("screenId").asInt();
+        int screenId = TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 85);
 
         ScreenRequestDTO screenRequestDTO2 = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)70);
 
@@ -276,36 +190,12 @@ public class ScreenIntegrationTest {
     }
 
     @Test
-    void updateScreen_shouldReturn209_whenDuplicateNameAndTheatreId() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+    void updateScreen_shouldReturn409_whenDuplicateNameAndTheatreId() throws Exception{
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 85);
 
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
-
-        ScreenRequestDTO screenRequestDTO1 = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
-
-        mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO1)))
-                .andExpect(status().isCreated());
-
-        ScreenRequestDTO screenRequestDTO2 = new ScreenRequestDTO(theatreId, "IMAX 3D", (short)70);
-
-        String screen2Response = mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO2)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int screenId = objectMapper.readTree(screen2Response).get("screenId").asInt();
+        int screenId = TestHelper.createScreen(mockMvc, objectMapper, theatreId, "IMAX 3D", (short) 70);
 
         ScreenRequestDTO updateRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)70);
 
@@ -319,27 +209,9 @@ public class ScreenIntegrationTest {
 
     @Test
     void deleteScreen_shouldReturn200_whenExists() throws Exception{
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
-
-        ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
-
-        String screenResponse = mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int screenId = objectMapper.readTree(screenResponse).get("screenId").asInt();
+        int screenId = TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 85);
 
         mockMvc.perform(delete("/screens/" + screenId)
                         .with(user("test@test.com").roles("ADMIN")))
@@ -356,47 +228,14 @@ public class ScreenIntegrationTest {
     }
 
     @Test
-    void deleteScreen_shouldReturn209_whenScreenHasShowtimes() throws Exception{
-        MovieRequestDTO movieRequestDTO = new MovieRequestDTO("Avatar", (short) 94, "Action");
+    void deleteScreen_shouldReturn409_whenScreenHasShowtimes() throws Exception{
+        int movieId = TestHelper.createMovie(mockMvc, objectMapper, "Avatar", (short) 94, "Action");
 
-        String movieResponse = mockMvc.perform(post("/movies")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(movieRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        int movieId = objectMapper.readTree(movieResponse).get("movieId").asInt();
+        int screenId = TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 85);
 
-        TheatreRequestDTO theatreRequestDTO = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String theatreResponse = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(theatreRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(theatreResponse).get("theatreId").asInt();
-
-        ScreenRequestDTO screenRequestDTO = new ScreenRequestDTO(theatreId, "CINEMAX 3D", (short)85);
-
-        String screenResponse = mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenRequestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int screenId = objectMapper.readTree(screenResponse).get("screenId").asInt();
-
-        ShowtimeRequestDTO showtimeRequestDTO = new ShowtimeRequestDTO(movieId, screenId, "2026-06-25", "11:00:00", 5F);
-
-        mockMvc.perform(post("/showtimes")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(showtimeRequestDTO)))
-                .andExpect(status().isCreated());
+        TestHelper.createShowtime(mockMvc, objectMapper, movieId, screenId, "2026-06-25", "11:00:00", 5F);
 
         mockMvc.perform(delete("/screens/" + screenId)
                         .with(user("test@test.com").roles("ADMIN")))

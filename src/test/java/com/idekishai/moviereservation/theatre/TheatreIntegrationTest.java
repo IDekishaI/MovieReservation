@@ -1,10 +1,10 @@
 package com.idekishai.moviereservation.theatre;
 
-import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.screen.repositories.ScreenRepository;
 import com.idekishai.moviereservation.seat.repositories.SeatRepository;
 import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import com.idekishai.moviereservation.theatre.repositories.TheatreRepository;
+import com.idekishai.moviereservation.utils.TestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,13 +62,9 @@ public class TheatreIntegrationTest {
 
     @Test
     void saveTheatre_shouldReturn409_whenDuplicateNameAndCity() throws Exception {
-        TheatreRequestDTO dto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+        TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated());
+        TheatreRequestDTO dto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
 
         mockMvc.perform(post("/theatres")
                         .with(user("test@test.com").roles("ADMIN"))
@@ -113,16 +109,7 @@ public class TheatreIntegrationTest {
 
     @Test
     void updateTheatre_shouldReturn200_whenValidRequest() throws Exception {
-        TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String response = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(response).get("theatreId").asInt();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
         TheatreRequestDTO updateDto = new TheatreRequestDTO("CineStar", "Nikole Tesle 2", "Novi Sad");
 
@@ -149,16 +136,7 @@ public class TheatreIntegrationTest {
 
     @Test
     void deleteTheatre_shouldReturn200_whenExists() throws Exception {
-        TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String response = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(response).get("theatreId").asInt();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
         mockMvc.perform(delete("/theatres/" + theatreId)
                         .with(user("test@test.com").roles("ADMIN")))
@@ -176,20 +154,9 @@ public class TheatreIntegrationTest {
 
     @Test
     void getAllTheatres_shouldReturn200_withListOfTheatres() throws Exception {
-        TheatreRequestDTO dto1 = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-        TheatreRequestDTO dto2 = new TheatreRequestDTO("CineStar", "Nikole Tesle 2", "Novi Sad");
+        TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto1)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto2)))
-                .andExpect(status().isCreated());
+        TestHelper.createTheatre(mockMvc, objectMapper, "CineStar", "Nikole Tesle 2", "Novi Sad");
 
         mockMvc.perform(get("/theatres")
                         .with(user("test@test.com").roles("ADMIN")))
@@ -199,24 +166,9 @@ public class TheatreIntegrationTest {
 
     @Test
     void deleteTheatre_shouldReturn409_whenTheatreHasScreens() throws Exception {
-        TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        String response = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(response).get("theatreId").asInt();
-
-        ScreenRequestDTO screenDto = new ScreenRequestDTO(theatreId, "Screen 1", (short) 100);
-
-        mockMvc.perform(post("/screens")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(screenDto)))
-                .andExpect(status().isCreated());
+        TestHelper.createScreen(mockMvc, objectMapper, theatreId, "CINEMAX 3D", (short) 100);
 
         mockMvc.perform(delete("/theatres/" + theatreId)
                         .with(user("test@test.com").roles("ADMIN")))
@@ -226,16 +178,7 @@ public class TheatreIntegrationTest {
 
     @Test
     void updateTheatre_shouldReturn200_whenKeepingSameNameAndCity() throws Exception {
-        TheatreRequestDTO createDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
-
-        String response = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int theatreId = objectMapper.readTree(response).get("theatreId").asInt();
+        int theatreId = TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
         TheatreRequestDTO updateDto = new TheatreRequestDTO("Cineplexx", "Vojvode Misica 5", "Nis");
 
@@ -251,24 +194,9 @@ public class TheatreIntegrationTest {
 
     @Test
     void updateTheatre_shouldReturn409_whenDuplicateNameAndCity() throws Exception {
-        TheatreRequestDTO firstDto = new TheatreRequestDTO("Cineplexx", "Cara Konstantina 1", "Nis");
+        TestHelper.createTheatre(mockMvc, objectMapper, "Cineplexx", "Cara Konstantina 1", "Nis");
 
-        mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(firstDto)))
-                .andExpect(status().isCreated());
-
-        TheatreRequestDTO secondDto = new TheatreRequestDTO("CineStar", "Nikole Tesle 2", "Novi Sad");
-
-        String response = mockMvc.perform(post("/theatres")
-                        .with(user("test@test.com").roles("ADMIN"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(secondDto)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        int secondTheatreId = objectMapper.readTree(response).get("theatreId").asInt();
+        int secondTheatreId = TestHelper.createTheatre(mockMvc, objectMapper, "CineStar", "Nikole Tesle 2", "Novi Sad");
 
         TheatreRequestDTO updateDto = new TheatreRequestDTO("Cineplexx", "Knjazevacka 3", "Nis");
 
