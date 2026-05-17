@@ -17,4 +17,11 @@ public interface ScreenRepository extends JpaRepository<Screen, Integer> {
     boolean existsByScreenNameAndTheatre_TheatreId(String screenName, int theatreId);
 
     boolean existsByScreenNameAndTheatre_TheatreIdAndScreenIdNot(String screenName, int theatreId, int screenId);
+
+    @Query("""
+                    SELECT COUNT(s) > 0
+                    FROM Seat s
+                    WHERE s.screen.screenId = :screenId
+            """)
+    boolean existsInSeats(int screenId);
 }

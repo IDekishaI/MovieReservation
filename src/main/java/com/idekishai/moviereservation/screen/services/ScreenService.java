@@ -63,6 +63,9 @@ public class ScreenService {
         if (screenRepository.existsInShowtimes(screenId))
             throw new ScreenInUseException(screenId);
 
+        if (screenRepository.existsInSeats(screenId))
+            throw new ScreenInUseException(screenId);
+
         screenRepository.deleteById(screenId);
     }
 

@@ -82,6 +82,30 @@ public class MovieIntegrationTest {
     }
 
     @Test
+    void saveMovie_shouldReturn400_whenBlankName() throws Exception {
+        MovieRequestDTO dto = new MovieRequestDTO("", (short) 94, "Action");
+
+        mockMvc.perform(post("/movies")
+                        .with(user("test@test.com").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"));
+    }
+
+    @Test
+    void saveMovie_shouldReturn400_whenInvalidMovieLength() throws Exception {
+        MovieRequestDTO dto = new MovieRequestDTO("Avatar", (short) -1, "Action");
+
+        mockMvc.perform(post("/movies")
+                        .with(user("test@test.com").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"));
+    }
+
+    @Test
     void saveMovie_shouldReturn401_whenNotAuthenticated() throws Exception {
         MovieRequestDTO dto1 = new MovieRequestDTO("Avatar", (short) 94, "Action");
         mockMvc.perform(post("/movies")

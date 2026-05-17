@@ -2,6 +2,8 @@ package com.idekishai.moviereservation.utils;
 
 import com.idekishai.moviereservation.movie.dtos.MovieRequestDTO;
 import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
+import com.idekishai.moviereservation.seat.dtos.SeatRequestDTO;
+import com.idekishai.moviereservation.seat.enums.SeatType;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import org.springframework.http.MediaType;
@@ -55,5 +57,16 @@ public class TestHelper {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("showtimeId").asInt();
+    }
+
+    public static int createSeat(MockMvc mockMvc, ObjectMapper objectMapper, int screenId, String seatRow, short seatColumn, SeatType seatType, boolean inUse) throws Exception {
+        SeatRequestDTO dto = new SeatRequestDTO(screenId, seatRow, seatColumn, seatType, inUse);
+        String response = mockMvc.perform(post("/seats")
+                        .with(user("test@test.com").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("seatId").asInt();
     }
 }
