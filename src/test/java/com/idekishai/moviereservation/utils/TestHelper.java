@@ -1,17 +1,26 @@
 package com.idekishai.moviereservation.utils;
 
+import com.idekishai.moviereservation.auth.dtos.UserPrincipal;
 import com.idekishai.moviereservation.movie.dtos.MovieRequestDTO;
 import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.seat.dtos.SeatRequestDTO;
 import com.idekishai.moviereservation.seat.enums.SeatType;
+import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TestHelper {
@@ -68,5 +77,31 @@ public class TestHelper {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("seatId").asInt();
+    }
+
+    public static int lockSeat(MockMvc mockMvc, ObjectMapper objectMapper, int showtimeId, int seatId, String userEmail) throws Exception {
+        ReservationRequestDTO dto = new ReservationRequestDTO(showtimeId, seatId);
+        String response = mockMvc.perform(post("/reservations/lock")
+                        .with(userPrincipal(userEmail))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("seatReservationId").asInt();
+    }
+
+    public static RequestPostProcessor userPrincipal(String email) {
+        UserPrincipal principal = new UserPrincipal(email, "Test User");
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                principal, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        return SecurityMockMvcRequestPostProcessors.authentication(auth);
+    }
+
+    public static RequestPostProcessor adminPrincipal(String email) {
+        UserPrincipal principal = new UserPrincipal(email, "Test Admin");
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                principal, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        return SecurityMockMvcRequestPostProcessors.authentication(auth);
     }
 }
