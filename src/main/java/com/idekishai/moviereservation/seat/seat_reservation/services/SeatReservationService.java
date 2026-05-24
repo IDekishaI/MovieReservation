@@ -46,7 +46,7 @@ public class SeatReservationService {
 
     @Transactional
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
-        Seat seat = seatRepository.findById(dto.seatId()).orElseThrow(() -> new SeatNotFoundException(dto.seatId()));
+        Seat seat = seatRepository.findByIdWithLock(dto.seatId()).orElseThrow(() -> new SeatNotFoundException(dto.seatId()));
 
         if (seatReservationRepository.countByLockedByAndStatus(SecurityUtils.getCurrentUserEmail(), ReservationStatus.LOCKED) > 2)
             throw new SeatLockLimitExceededException(3);
