@@ -48,7 +48,9 @@ public class SeatReservationService {
     public SeatReservationDTO lockSeat(ReservationRequestDTO dto) {
         Seat seat = seatRepository.findByIdWithLock(dto.seatId()).orElseThrow(() -> new SeatNotFoundException(dto.seatId()));
 
-        if (seatReservationRepository.countByLockedByAndStatus(SecurityUtils.getCurrentUserEmail(), ReservationStatus.LOCKED) > 2)
+        short lockCount = (short) seatReservationRepository.countByLockedByAndStatus(SecurityUtils.getCurrentUserEmail(), ReservationStatus.LOCKED);
+
+        if (lockCount > 2)
             throw new SeatLockLimitExceededException(3);
 
         Showtime showtime = showtimeRepository.findById(dto.showtimeId())

@@ -5,6 +5,7 @@ import com.idekishai.moviereservation.movie.dtos.MovieRequestDTO;
 import com.idekishai.moviereservation.screen.dtos.ScreenRequestDTO;
 import com.idekishai.moviereservation.seat.dtos.SeatRequestDTO;
 import com.idekishai.moviereservation.seat.enums.SeatType;
+import com.idekishai.moviereservation.seat.seat_reservation.dtos.BookingRequestDTO;
 import com.idekishai.moviereservation.seat.seat_reservation.dtos.ReservationRequestDTO;
 import com.idekishai.moviereservation.showtime.dtos.ShowtimeRequestDTO;
 import com.idekishai.moviereservation.theatre.dtos.TheatreRequestDTO;
@@ -19,8 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TestHelper {
@@ -85,8 +85,18 @@ public class TestHelper {
                         .with(userPrincipal(userEmail))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andDo(print())
                 .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readTree(response).get("seatReservationId").asInt();
+    }
+
+    public static int bookSeat(MockMvc mockMvc, ObjectMapper objectMapper, int reservationId, String userEmail) throws Exception {
+        BookingRequestDTO dto = new BookingRequestDTO(reservationId, "Marko Markovic", "1234567890123456", "12/27", "123");
+        String response = mockMvc.perform(patch("/reservations/book")
+                        .with(userPrincipal(userEmail))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(response).get("seatReservationId").asInt();
     }

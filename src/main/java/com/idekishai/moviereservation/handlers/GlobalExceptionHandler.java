@@ -207,7 +207,8 @@ public class GlobalExceptionHandler {
             SeatNotLockedException.class,
             SeatReservationExpiredException.class,
             SeatAlreadyLockedException.class,
-            SeatNotOwnedException.class
+            SeatNotOwnedException.class,
+            ReservationNotBookedException.class
     })
     public ResponseEntity<Map<String, Object>> handleReservationStateException(RuntimeException ex) {
         log.warn("Reservation state violation: {}", ex.getMessage());
